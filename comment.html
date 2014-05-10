@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ABOUT</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script type="javascript">
+        console.log('test');
+    </script>
+    <script src="js/ma.js"></script>
+    <script src="js/common.js"></script>
+    <script type="javascript">
+        console.log('test');
+        var template = $('#template').html();
+        Mustache.parse(template);   // optional, speeds up future uses
+        var rendered = Mustache.render(template, {fn: getCookie('fn'),title:getCookie('fn'),url:"wbeegroup.com/pdf/web/viewer.html?fn="+getCookie('fn')});
+        byid('targetdiv').innerHTML=rendered;
+        console.log(template);
+        console.log(rendered);
+    </script>
+</head>
+<body>
+<div id="targetdiv" style="width: 500px">
+    <div class="ds-thread" data-thread-key="common" data-title="common" data-url="http://newbeegroup.com/"></div>
+</div>
+<script type="text/javascript">
+    var duoshuoQuery = {short_name:"ubtamator"};
+    (function() {
+        var ds = document.createElement('script');
+        ds.type = 'text/javascript';ds.async = true;
+        ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+        ds.charset = 'UTF-8';
+        (document.getElementsByTagName('head')[0]
+                || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+</script>
+<!-- 多说公共JS代码 end -->
+</body>
+
+<script id="template" type="x-tmpl-mustache">
+<div class="ds-thread" data-thread-key="{{ fn }}" data-title="{{ title }}" data-url="{{ url }}"></div>
+</script>
+</html>
