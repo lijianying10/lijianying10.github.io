@@ -5,6 +5,7 @@ window.onresize=function(){autoadjestreader();};
 autoadjestreader();
 loadlabel();
 
+SetCookie('fn','default.pdf');
 
 
 function setheigh(){
