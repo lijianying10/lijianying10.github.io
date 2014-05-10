@@ -1,24 +1,9 @@
 /**
  * Created by lijianying on 14-5-10.
  */
-//if( navigator.appName == "Microsoft Internet Explorer")
-//{alert('not support ie')}
-
-
-
-
+window.onresize=function(){autoadjestreader();};
+autoadjestreader();
 loadlabel();
-//console.log(getCookie('readerheigh'));
-
-
-if(getCookie('readerheigh')==null)
-{
-//    console.log('hrere');
-}
-else
-{
-    byid('pdffile').style.height=getCookie('readerheigh');
-}
 
 function byid(id)
 {return document.getElementById(id);}
@@ -27,12 +12,6 @@ function setheigh(){
     byid('pdffile').style.height=byid('inputheigh').value+'px';
     SetCookie('readerheigh',byid('pdffile').style.height);
 }
-
-
-
-
-
-
 
 function fullscreen()
 {
@@ -48,27 +27,11 @@ function fullscreen()
 
 }
 
-
-
-
-
-
-
 function readerAdjest()
 {
-//    var h= document.body.clientHeight-42-500;
-//    byid('pdffile').style.height = h+'px';
     var    s  = "\r\n网页正文部分上："+  window.screenTop;
     console.log(s);
 }
-
-
-
-
-
-
-
-
 
 function SetCookie(name,value)//两个参数，一个是cookie的名子，一个是值
 {
@@ -118,16 +81,13 @@ function loadlabel()
             break;
         }
         var targetbook = books[book];
-        console.log(book);
         var book = targetbook.getAttribute('data');
         book=eval('(' + book + ')');
         targetbook.innerHTML=book['title'];
     }
 }
 
-//todo: fix error
-if(getCookie('fn')!=null)
+function autoadjestreader()
 {
-    console.log('codehree');
-    Changeto(getCookie('fn'));
+    byid('pdffile').style.height=window.innerHeight-175+'px'
 }
