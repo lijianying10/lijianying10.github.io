@@ -29,6 +29,9 @@
 
 'use strict';
 
+//var pdffiles_position='../../pdffiles/';
+var pdffiles_position='http://pdffile.qiniudn.com/';//using qiniudn acc
+
 var globale=$_GET()["fn"];
 
 function $_GET(){
@@ -65,7 +68,7 @@ function $_GET(){
 function ChangePdfFile(FileName)
 {
     DEFAULT_URL = FileName;
-    DEFAULT_URL = '../../pdffiles/'+DEFAULT_URL;
+    DEFAULT_URL = pdffiles_position+DEFAULT_URL;
     webViewerInitialized();
 }
 
@@ -107,7 +110,7 @@ else
 {
     DEFAULT_URL=globale;
 }
-DEFAULT_URL = '../../pdffiles/'+DEFAULT_URL;//change pdf file location
+DEFAULT_URL = pdffiles_position+DEFAULT_URL;//change pdf file location
 //end of change point
 
 PDFJS.imageResourcesPath = './images/';
