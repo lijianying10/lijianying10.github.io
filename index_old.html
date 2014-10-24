@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <title>jianyingli's blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="./css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="./css/bootstrap.css" rel="stylesheet">
+    <link href="./css/main.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="../assets/js/html5shiv.js"></script>
+      <script type="javascript">
+          alert('UR using ie!');
+      </script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://getbootstrap.com/2.3.2/assets/ico/apple-touch-icon-144-precomposed.png">-->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="114x114" href="http://getbootstrap.com/2.3.2/assets/ico/apple-touch-icon-114-precomposed.png">-->
+      <!--<link rel="apple-touch-icon-precomposed" sizes="72x72" href="http://getbootstrap.com/2.3.2/assets/ico/apple-touch-icon-72-precomposed.png">-->
+                    <!--<link rel="apple-touch-icon-precomposed" href="http://getbootstrap.com/2.3.2/assets/ico/apple-touch-icon-57-precomposed.png">-->
+                                   <!--<link rel="shortcut icon" href="http://getbootstrap.com/2.3.2/assets/ico/favicon.png">-->
+
+</head>
+
+  <body>
+
+  <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="#">jianyingli's BLOG</a>
+          <div class="nav-collapse collapse">
+            <!--<p class="navbar-text pull-right">-->
+              <!--Logged in as <a href="#" class="navbar-link">Username</a>-->
+            <!--</p>-->
+            <ul class="nav">
+              <!--<li class="active"><a onclick="autoadjestreader()" href="#">AutoAdjstreader</a></li>-->
+              <!--<li><a href="#"><input id="inputheigh"class="form-control" style="padding: 0;margin: 0px;width: 120px" type="text" placeholder="Reader Heigh"></a></li>-->
+              <!--<li><a onclick="setheigh()" href="#">set heigh</a></li>-->
+              <li><a onclick="fullscreen()" href="#">Full Screen</a></li>
+              <li><a target="_blank"  href="comment.html">ABOUT</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span2">
+          <div class="well sidebar-nav">
+            <ul class="nav nav-list">
+              <li class="nav-header">CMake</li>
+              <li><a name="book_link" onclick="changeBook(this.getAttribute('data'))" data="B_2013Apr2" href="#">Loading...</a></li>
+              <li><hr style="margin: 2px"></li>
+              <li><a name="book_link" onclick="changeBook(this.getAttribute('data'))" data="B_2013May1" href="#">Loading...</a></li>
+              <li class="nav-header">Server</li>
+              <li><a name="book_link" onclick="changeBook(this.getAttribute('data'))" data="B_2013May2" href="#">Loading...</a></li>
+              <li class="nav-header">CC</li>
+              <li><a name="book_link" onclick="changeBook(this.getAttribute('data'))" data="CC_memory" href="#">Loading...</a></li>
+			  <li><a name="book_link" onclick="changeBook(this.getAttribute('data'))" data="CC_Linux_Proformance" href="#">Loading...</a></li>
+            </ul>
+          </div><!--/.well -->
+        </div><!--/span-->
+          <div class="span10" >
+              <iframe id="pdffile" style="height: 500px"  class="span14" src="pdf/web/viewer.html"></iframe>
+          </div>
+      </div><!--/row-->
+
+      <hr>
+
+      <footer>
+        <p>© jianyingli 2014</p>
+      </footer>
+
+    </div><!--/.fluid-container-->
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="http://btjacc.qiniudn.com/jquery.js"></script>
+    <script src="http://btjacc.qiniudn.com/bootstrap-transition.js"></script>
+    <script src="http://btjacc.qiniudn.com/bootstrap-alert.js"></script>
+    <script src="http://btjacc.qiniudn.com/bootstrap-modal.js"></script>
+    <script src="http://btjacc.qiniudn.com/bootstrap-dropdown.js"></script>
+    <script src="http://btjacc.qiniudn.com/bootstrap-scrollspy.js"></script>
+    <script src="http://btjacc.qiniudn.com/bootstrap-tab.js"></script>
+    <script src="http://btjacc.qiniudn.com/bootstrap-tooltip.js"></script>
+    <script src="http://btjacc.qiniudn.com/bootstrap-popover.js"></script>
+    <script src="http://btjacc.qiniudn.com/bootstrap-button.js"></script>
+    <script src="http://btjacc.qiniudn.com/bootstrap-collapse.js"></script>
+    <script src="http://btjacc.qiniudn.com/bootstrap-carousel.js"></script>
+    <script src="http://btjacc.qiniudn.com/bootstrap-typeahead.js"></script>
+    <script src="js/common.js"></script>
+    <script src="Data/FData.js"></script>
+    <script src="js/control.js"></script>
+	<!--CNZZ-->
+	<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1000386034'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "v1.cnzz.com/z_stat.php%3Fid%3D1000386034' type='text/javascript'%3E%3C/script%3E"));</script>
+  
+  </body></html>
