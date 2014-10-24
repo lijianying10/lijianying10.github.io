@@ -1,1 +1,72 @@
-test lijianying10 2
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1024" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>开课宣讲</title>
+    <link href="css/impress-demo.css" rel="stylesheet" />
+    <link rel="shortcut icon" href="favicon.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+</head>
+<body class="impress-not-supported">
+<div class="fallback-message">
+    <p>Your browser <b>doesn't support the features required</b> by impress.js, so you are presented with a simplified version of this presentation.</p>
+    <p>For the best experience please use the latest <b>Chrome</b>, <b>Safari</b> or <b>Firefox</b> browser.</p>
+</div>
+
+<div id="impress">
+    <div id="bored" class="step slide" data-x="-1000" data-y="-2500">
+        <h1 style="font-size: 150px; margin-top: 250px">WELCOME</h1>
+    </div>
+
+    <div class="step slide" data-x="0" data-y="-2500">
+        <h1 style="font-size: 150px; margin-top: 50px; color: red">&nbsp;&nbsp;&nbsp;ABOUT</h1>
+        <h2 style="font-size: 150px; margin-top: 100px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Team</h2>
+        <h2 style="font-size: 150px; margin-top: 100px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Me</h2>
+    </div>
+
+    <div class="step slide" data-x="1000" data-y="-2500">
+        <h1 style="font-size: 150px; margin-top: 50px; color: red">&nbsp;&nbsp;&nbsp;Product</h1>
+        <ul style="margin-top: 150px;font-size: 65px ;">
+            <li class="step_li"><text style="color: blue">类型：</text><text>电子商务型网站</text></li>
+            <li class="step_li"><text style="color: green">服务：</text><text>留学服务文书</text></li>
+            <li class="step_li"><text style="color: pink">优势：</text><text>跳过留学中介给</br></br>买家带来更合理的价格。</br></br>
+                卖家获得更高的收益。</text></li>
+
+        </ul>
+    </div>
+
+    <div id="title" class="step" data-x="0" data-y="0" data-scale="4">
+        <span class="try">我们讲座的</span>
+        <h1>GOAL<sup>*</sup></h1>
+        <span class="footnote"><sup>*</sup> 你未来的收获</span>
+    </div>
+
+    <div id="goal_1" class="step" data-x="0" data-z="-1000" data-rotate-x="-90" data-scale="3">
+        <h1>Services</h1>
+        <span class="footnote">sae</span>
+        <li>MySQL</li>
+        <li>Memcache</li>
+        <li>KVDB</li>
+        <span class="footnote">UpYUN</span> </br>
+        <span class="footnote">DnsPOD</span>
+    </div>
+
+    <div id="overview" class="step" data-x="3000" data-y="1500" data-scale="10">
+    </div>
+
+</div>
+
+<div class="hint">
+    <p>按→播放下一页</p>
+</div>
+<script>
+if ("ontouchstart" in document.documentElement) { 
+    document.querySelector(".hint").innerHTML = "<p>Tap on the left or right to navigate</p>";
+}
+</script>
+<script src="js/impress.js"></script>
+<script>impress().init();</script>
+</body>
+</html>
