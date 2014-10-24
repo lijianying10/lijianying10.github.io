@@ -6,8 +6,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>开课宣讲</title>
     <link href="css/impress-demo.css" rel="stylesheet" />
+    <link href="rainbow/github.css" rel="stylesheet" />
     <link rel="shortcut icon" href="favicon.png" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <script src="rainbow/jquery-1.11.1.min.js"></script>
+    <script src="rainbow/rainbow.js"></script>
+    <script src="rainbow/php.js"></script>
 </head>
 <body class="impress-not-supported">
 <div class="fallback-message">
@@ -37,13 +41,13 @@
         </ul>
     </div>
 
-    <div id="title" class="step" data-x="0" data-y="0" data-scale="4">
+    <div id="title" class="step title" data-x="0" data-y="0" data-scale="4">
         <span class="try">我们讲座的</span>
         <h1>GOAL<sup>*</sup></h1>
         <span class="footnote"><sup>*</sup> 你未来的收获</span>
     </div>
 
-    <div id="goal_1" class="step" data-x="0" data-z="-1000" data-rotate-x="-90" data-scale="3">
+    <div id="goal_1" class="step" data-x="-1500" data-z="-1000" data-rotate-x="-90" data-scale="3">
         <h1>Services</h1>
         <span class="footnote">sae</span>
         <li>MySQL</li>
@@ -53,9 +57,161 @@
         <span class="footnote">DnsPOD</span>
     </div>
 
+    <div id="goal_2" class="step" data-x="-1500" data-z="-2500" data-rotate-y="90" data-rotate-x="-90" data-scale="3">
+        <h1>授课方法演示</h1>
+        <span class="footnote">代码渲染 -- rainBow</span>
+        <pre>
+<code data-language="php">// this is some sample php code
+    $i = 0;
+    for ($i = 0; $i &lt; 25; ++$i) {
+    echo $i;
+    }
+
+    # comment like this
+    function customFunction()
+    {
+    return mt_rand(1, 100);
+    }
+
+    while ($test) {
+    echo 'blah' . "\n";
+    };
+
+    $fruits = array('banana', 'strawberry', 'blueberry', 'apple', 'blackberry');
+
+    asort($fruits);
+
+    foreach ($fruits as $key => $value) {
+    echo $value;
+    }</code>
+</pre>
+    </div>
+
+    <div id="goal_3" class="step" data-x="-1500" data-z="-3500" data-rotate-y="90" data-scale="3">
+        <h1>控件演示一步到位</h1>
+        <input placeholder="账号"></br>
+        <input placeholder="密码"></br>
+        <button>登陆</button></br>
+        <span>所有例子当场测试</span>
+    </div>
+
+    <div id="goal_4" class="step" data-x="-1500" data-z="-5000" data-rotate-x="-90" data-scale="3">
+        <h1>授课时间，灵活安排</h1>
+        <span style="color: red">&nbsp;&nbsp;前一个小时讲课</span></br>
+        <span style="color: red">&nbsp;&nbsp;后半个小时自由问答</br>没有问题就可以走了</span>
+    </div>
+    <div id="goal_5" class="step" data-x="-1500" data-z="-6000" data-rotate-x="90" data-scale="3">
+        <h1>课程目标</h1>
+        <span style="color: red">&nbsp;&nbsp;通过几个学时的学习</span></br>
+        <span style="color: limegreen">&nbsp;&nbsp;锻炼一批，能够直接再企业做开发的</br>高质量程序员</span>
+    </div>
+
+
     <div id="overview" class="step" data-x="3000" data-y="1500" data-scale="10">
     </div>
 
+    <div id="inspire" class="step title" data-x="3000" data-y="0" data-scale="4">
+        <span class="try">获取能量</span>
+        <h1>INSPIRE<sup>*</sup></h1>
+        <span class="footnote"><sup>*</sup> 激发灵感</span>
+    </div>
+    <div id="inspire_1" class="step" data-x="3000" data-z="-3000" data-y="90" data-rotate-x="90" data-scale="4">
+        <h1>激发兴趣</h1>
+    </div>
+    <div id="inspire_2" class="step" data-x="3000" data-z="-3200" data-y="90" data-rotate-x="90" data-scale="4">
+        <h1>激发新的想法</h1>
+    </div>
+    <div id="inspire_4" class="step" data-x="3000" data-z="-3600" data-y="90" data-rotate-x="90" data-scale="4">
+        <h1>另外会设置一个真正做开源的开源工作室 -- NewBeeGroup</h1>
+    </div>
+
+    <div id="overview" class="step" data-x="3000" data-y="1500" data-scale="13">
+    </div>
+
+    <div id="fair" class="step title" data-x="0" data-y="4000" data-scale="4">
+        <span class="try">动力之源</span>
+        <h1>fair<sup>*</sup></h1>
+    </div>
+
+    <div id="fair_1" class="step" data-x="-1500" data-y="4711" data-z="-500" data-rotate-x="-90" data-scale="4">
+        <span class="try">公平交易，按需付费。</span>
+        </br>
+        <text style="font-size: 40px;color: cadetblue">&nbsp;&nbsp;&nbsp;干多少活，就拿多少钱。</text>
+    </div>
+    <div id="fair_2" class="step" data-x="-1500" data-y="4711" data-z="-1000" data-rotate-y="90" data-rotate-x="-90" data-scale="4">
+        <span class="try">质量把控，标准统一。</span>
+        </br>
+        <text style="font-size: 40px;color: cadetblue">&nbsp;&nbsp;&nbsp;质量把控有详细的说明。</text>
+    </div>
+    <div id="fair_3" class="step" data-x="-1500" data-y="4711" data-z="-1500" data-rotate-y="180" data-rotate-x="-90" data-scale="4">
+        <span class="try">需求确定，一口定价。</span>
+        </br>
+        <text style="font-size: 40px;color: cadetblue">&nbsp;&nbsp;&nbsp;需求定价都描述详尽，确定接受之后才会开始开发。</text>
+    </div>
+    <div id="fair_4" class="step" data-x="-1500" data-y="4711" data-z="-2000" data-rotate-y="270" data-rotate-x="-90" data-scale="4">
+        <span class="try">测试先行，完成明确。</span>
+        </br>
+        <text style="font-size: 40px;color: cadetblue">&nbsp;&nbsp;&nbsp;验收收尾的测试是在开发之前就完成的，只要自动化测试能通过就算模块完成。以ACM为例。</text>
+    </div>
+    <div id="fair_5" class="step" data-x="-1500" data-y="4711" data-z="-2700" data-rotate-y="360" data-rotate-x="-90" data-scale="4">
+        <span class="try">学校签约，担保交易。</span>
+        </br>
+        <text style="font-size: 40px;color: cadetblue">&nbsp;&nbsp;&nbsp;学校已经跟我们做了足够多的交流了，能够保障学生权益不受侵犯，我们是先付款后承包工程。 钱是从学校方面自提。</text>
+    </div>
+
+    <div id="overview" class="step" data-x="3000" data-y="1500" data-scale="13">
+    </div>
+
+    <div id="lucency" class="step title" data-x="3000" data-y="4000" data-scale="4">
+        <span class="try">透明为效率之源</span>
+        <h1>lucency<sup>*</sup></h1>
+    </div>
+
+    <div id="lucency_1" class="step" data-x="3000" data-y="4000" data-z="-1000"  data-rotate-x="-90" data-scale="4">
+        <span class="try">付费形式，全员统一。</span>
+        </br>
+        <text style="font-size: 40px;color: cadetblue">&nbsp;&nbsp;&nbsp;所有人付费规则公开透明。并提供奖金排行榜，经过周期结算之后结余工资之外，
+            会按表现给予相应鼓励。</text>
+    </div>
+
+    <div id="lucency_2" class="step" data-x="1000" data-y="6000" data-z="-2000"  data-rotate-x="-90" data-rotate-y="90" data-scale="4">
+        <span class="try">无缝交流，避免误会。</span>
+        </br>
+        <text style="font-size: 40px;color: cadetblue">&nbsp;&nbsp;&nbsp;问的所有问题只要是说明白的，都给予正面的回答。只要时间范围允许。
+            就以最快的速度回答，全部实话。
+            个人信息敏感信息斟酌回答。并且只能一对一的说。</text>
+    </div>
+
+    <div id="lucency_3" class="step" data-x="3000" data-y="8000" data-z="-3000"  data-rotate-x="-90" data-rotate-y="180" data-scale="4">
+        <span class="try">弹性时间，自由安排。</span>
+        </br>
+        <text style="font-size: 40px;color: cadetblue">&nbsp;&nbsp;&nbsp;充分利用学生的零碎时间，只要你想尝试，就可以直接来做。
+            你的时间可以自由安排，与卖身契说NO</text>
+    </div>
+
+    <div id="overview" class="step" data-x="3000" data-y="1500" data-scale="13">
+    </div>
+
+    <div id="respect" class="step title" data-x="8000" data-y="2000" data-scale="4">
+        <span class="try">团队润滑油</span>
+        <h1>respect<sup>*</sup></h1>
+    </div>
+    <div id="respect_1" class="step title" data-x="8000" data-y="2000" data-z="-1000" data-rotate-x="-90" data-scale="4">
+        <span class="try">干活拿钱，一视同仁。</span>
+        </br>
+        <text style="font-size: 40px;color: cadetblue">&nbsp;&nbsp;&nbsp;所有的人干多少活拿多少钱，没有关于职位，背景的区别。
+            我们只谈论对项目整体的贡献以及单独模块的贡献来发奖金。</text>
+    </div>
+    <div id="respect_2" class="step title" data-x="8000" data-y="2000" data-z="-1000" data-rotate-x="-90" data-rotate-y="90" data-scale="4">
+        <span class="try">地位平等，各司其责。</span>
+        </br>
+        <text style="font-size: 40px;color: cadetblue">&nbsp;&nbsp;&nbsp;加入开发的人，没有等级地位的区别，没有上下级之分别，
+            有任何事情请以最简短的方式交流讨。</text>
+    </div>
+
+    <div id="overview" class="step" data-x="3000" data-y="1500" data-scale="13">
+    </div>
+    
 </div>
 
 <div class="hint">
