@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>docker新手的超级开始</title>
+        <link href="/css/prism.css" rel="stylesheet">
+        <link href="/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/css/blog-post.css" rel="stylesheet">
+        <link href="/css/typo.css" rel="stylesheet">
+        <link rel="shortcut icon" href="/favicon.ico" />
+    </head>
+
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Philo</a>
+                </div>
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/">HOME</a>
+                        </li>
+                        <li>
+                            <a href="/archive/">Archive</a>
+                        </li>
+                        <li>
+                            <a href="/2015/02/21/index/index.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container -->
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container" style="
+                margin-top: 70px;
+                ">
+
+            <div class="row">
+
+                <!-- Blog Post Content Column -->
+                <div class="col-lg-9 col-12">
+
+                    <!-- Blog Post -->
+
+<!-- Title -->
+<h1><a href="/2015/04/01/docker-super-start/">docker新手的超级开始</a></h1>
+ 
+<!-- Author -->
+<p class="lead">
+Tags
+
+<a href="/tags/docker">docker</a>
+
+</p>
+
+<hr>
+
+<!-- Date/Time -->
+<p><span class="glyphicon glyphicon-time"></span> 2015-04-01 10:17:28</p>
+
+<hr>
+
+<div class="typo">
+<h2>超级开始</h2>
+
+<p>在本文中简短的描述一下如何开始使用docker工作
+理论研究以及介绍什么的左上角，google去一抓一大把。
+这里只给出一别必要的操作，既然说他是好东西。
+我们就拉出来616看看是什么情况。（能动手就别吵吵了）
+命令遇到问题就见招拆招。都运行完自己就有自己的体会了。</p>
+
+<h2>这时候推荐在看一看docker<code>官方的</code>用户引导<a href="https://docs.docker.com/userguide/">https://docs.docker.com/userguide/</a></h2>
+
+<h2>最后看命令的manual基本上就了解透彻了，再出什么问题就只能见招拆招了。</h2>
+
+<h2>准备环境：</h2>
+
+<p>ubuntu 14.04 虚拟机云主机测试服务器都可以
+准备账号： daocloud
+以内国内网络经常出现错误因此我们需要换一个其他地方来下载docker镜像
+在注册完进入到console里面之后，<code>很明显的位置上</code>会告诉你怎么用的。
+我这里就不说我的账号了。(<em>^__^</em>) 嘻嘻……</p>
+
+<h2>安装docker</h2>
+
+<pre><code>wget -qO- https://get.docker.com/ | sh
+</code></pre>
+
+<p>正常一路走下去之后啥都不用管了</p>
+
+<p>然后根据daocloud来配置你的image源</p>
+
+<p>比如说你想下载mongodb 以及mysql 这两个服务。
+<code>一定要注意，docker需要root权限，这货是个服务</code>
+那么输入如下命令</p>
+
+<pre><code>docker pull mysql:5.6
+docker pull mongo:2.6
+</code></pre>
+
+<p>一定要加tags 不然就自动下载latest都是最新的 ，有可能不适用。</p>
+
+<p>有了镜像之后，就可以新建instance来运行你的程序了。
+这里直接给出运行模板。方便使用。配置管理。</p>
+
+<pre><code>docker run --name mysqlInstance -e MYSQL_ROOT_PASSWORD=1 -v [host绝对路径]:/var/lib/mysql -d -p 3307:3306 mysql:5.6
+</code></pre>
+
+<p>参数解释：</p>
+
+<pre><code>run是新运行一个instance
+--name 非重要，不然就是一个hash不好操作。也不好分类别名之类的
+-e 容器内部的环境参数 这里的参数是设置mysql root 密码的
+-v 挂载容器内部的文件夹到外部，但是需要的是绝对路径（具有持久化方面的应用还是需要挂载本地磁盘的，不然删除之后数据就没了，肯定有其他方法导出来或者做管理的。但是我感觉这种方法是最方便的）
+-p 端口映射 host:con
+image:tag
+</code></pre>
+
+<h2>查看所有运行的容器：</h2>
+
+<pre><code>docker ps -a
+</code></pre>
+
+<p>显示了所有信息</p>
+
+<h2>运行或者关闭一个docker</h2>
+
+<pre><code>docker start [name]
+docker stop [name]
+</code></pre>
+
+<h2>删除一个容器</h2>
+
+<pre><code>docker rm [name]
+</code></pre>
+
+<p>访问一个正在运行的容器（调试的时候非常重要）
+首先我们不要安装ssh了。没必要因为docker都给你准备好接口了</p>
+
+<pre><code>docker exec -it [name] /bin/bash
+</code></pre>
+
+<p>就可以运行一个容器内部的bash了。非常方便的调试你的服务。</p>
+
+<h2>异常处理</h2>
+
+<p>主要是针对内存比较小的情况做一个异常处理</p>
+
+<h3>首当其冲阿里云</h3>
+
+<p>默认路由与docker默认内网冲突
+以及阿里云说自己面向daocker了但是image下载不下来。</p>
+
+<pre><code>sudo route del -net 172.16.0.0 netmask 255.240.0.0
+</code></pre>
+
+<p>删掉路由表不然服务启动不起来，删除之后不要忘记重启</p>
+
+<h3>512mb左右内存运行docker的问题</h3>
+
+<p>mysql报错 ： <code>InnoDB: Cannot allocate memory for the buffer pool</code></p>
+
+<p>最后innodb启动不起来
+google之</p>
+
+<pre><code class="language-shell">dd if=/dev/zero of=/swapfile bs=1M count=512
+mkswap /swapfile
+swapon /swapfile
+/swapfile swap swap defaults 0 0 to /etc/fstab
+</code></pre>
+
+<p>内存小就添加swap来搞定问题</p>
+
+</div>
+
+<hr>
+本人博客文章采用<a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC Attribution-NonCommercial协议</a>: CC Attribution-NonCommercial 必须保留原作者署名,并且不允许用于商业用途,其他行为都是允许的。
+<hr>
+
+<script src="https://utteranc.es/client.js"
+        repo="lijianying10/RollingBlog"
+        issue-term="docker新手的超级开始"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2015/04/01/docker-super-start/" data-title="docker新手的超级开始" data-url="http://www.philo.top/2015/04/01/docker-super-start/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"philotop"};
+(function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+})();
+</script>
+<!-- 多说公共JS代码 end -->
+
+<hr>
+
+                </div>
+
+                <!-- Blog Sidebar Widgets Column -->
+                <div class="col-lg-3 col-12">
+
+                    <!-- Blog Search Well -->
+                    <!--                 <div class="well">
+                        <h4>Blog Search</h4>
+                        <div class="input-group">
+                        <input type="text" class="form-control">
+                        <span class="input-group-btn">
+                        <button class="btn btn-default" type="button">
+                        <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        </span>
+                        </div> -->
+                        <!-- /.input-group -->
+                        <!-- </div> -->
+
+                        <!-- Blog Categories Well -->
+                        <div class="well">
+                            <h4>TAGS</h4>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/wiki">wiki(2)</a></br><a href="/tags/thinking">thinking(3)</a></br><a href="/tags/node">node(1)</a></br><a href="/tags/iptables">iptables(1)</a></br><a href="/tags/devenv">devenv(1)</a></br><a href="/tags/elk">elk(1)</a></br><a href="/tags/oop">oop(1)</a></br><a href="/tags/html">html(1)</a></br><a href="/tags/mesos">mesos(1)</a></br><a href="/tags/tmux">tmux(1)</a></br><a href="/tags/git">git(8)</a></br><a href="/tags/nodejs">nodejs(1)</a></br><a href="/tags/DaoCloud">DaoCloud(1)</a></br><a href="/tags/java">java(2)</a></br><a href="/tags/visualization">visualization(1)</a></br><a href="/tags/elasticsearch">elasticsearch(1)</a></br><a href="/tags/requirejs">requirejs(1)</a></br><a href="/tags/network">network(2)</a></br><a href="/tags/dns">dns(1)</a></br><a href="/tags/ss">ss(1)</a></br><a href="/tags/css">css(1)</a></br><a href="/tags/docker">docker(22)</a></br><a href="/tags/centos">centos(1)</a></br><a href="/tags/mysql">mysql(3)</a></br><a href="/tags/grub">grub(1)</a></br><a href="/tags/butterfly">butterfly(1)</a></br><a href="/tags/web">web(3)</a></br><a href="/tags/php">php(1)</a></br><a href="/tags/mongodab">mongodab(1)</a></br><a href="/tags/putty">putty(2)</a></br><a href="/tags/RHEL">RHEL(1)</a></br><a href="/tags/PXE">PXE(1)</a></br><a href="/tags/ci">ci(1)</a></br><a href="/tags/iPXE">iPXE(1)</a></br><a href="/tags/gh60">gh60(1)</a></br><a href="/tags/env">env(2)</a></br><a href="/tags/DES">DES(1)</a></br><a href="/tags/microservice">microservice(2)</a></br><a href="/tags/Ubuntu">Ubuntu(1)</a></br><a href="/tags/logstash">logstash(1)</a></br><a href="/tags/c">c(1)</a></br><a href="/tags/marathon">marathon(1)</a></br><a href="/tags/owncloud">owncloud(1)</a></br><a href="/tags/npm">npm(1)</a></br><a href="/tags/virtualbox">virtualbox(3)</a></br><a href="/tags/python">python(4)</a></br><a href="/tags/delegate">delegate(1)</a></br><a href="/tags/mac">mac(2)</a></br><a href="/tags/tray">tray(1)</a></br><a href="/tags/require.js">require.js(1)</a></br><a href="/tags/etcd">etcd(3)</a></br><a href="/tags/postgresql">postgresql(1)</a></br><a href="/tags/systemd-resolved">systemd-resolved(1)</a></br><a href="/tags/js">js(8)</a></br><a href="/tags/phpExtension">phpExtension(1)</a></br><a href="/tags/rancher">rancher(2)</a></br><a href="/tags/html5">html5(1)</a></br><a href="/tags/test">test(1)</a></br>
+                                    </ul>
+                                </div>
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/homebrew">homebrew(1)</a></br><a href="/tags/linux">linux(5)</a></br><a href="/tags/macos">macos(1)</a></br><a href="/tags/Cow">Cow(1)</a></br><a href="/tags/yaml">yaml(1)</a></br><a href="/tags/golang">golang(23)</a></br><a href="/tags/ucloud">ucloud(1)</a></br><a href="/tags/redsocks">redsocks(1)</a></br><a href="/tags/article">article(1)</a></br><a href="/tags/Docker">Docker(2)</a></br><a href="/tags/minecraft">minecraft(2)</a></br><a href="/tags/vim">vim(3)</a></br><a href="/tags/storage">storage(1)</a></br><a href="/tags/atom">atom(2)</a></br><a href="/tags/MongoDB">MongoDB(1)</a></br><a href="/tags/runc">runc(1)</a></br><a href="/tags/bootstrap">bootstrap(1)</a></br><a href="/tags/HomeBrew">HomeBrew(1)</a></br><a href="/tags/iterm2">iterm2(1)</a></br><a href="/tags/flannel">flannel(1)</a></br><a href="/tags/RunC">RunC(1)</a></br><a href="/tags/bazel">bazel(2)</a></br><a href="/tags/dev">dev(2)</a></br><a href="/tags/profiling">profiling(2)</a></br><a href="/tags/kibina">kibina(1)</a></br><a href="/tags/android">android(1)</a></br><a href="/tags/hexo">hexo(3)</a></br><a href="/tags/nginx">nginx(6)</a></br><a href="/tags/ubuntu">ubuntu(5)</a></br><a href="/tags/career">career(1)</a></br><a href="/tags/syslinux">syslinux(1)</a></br><a href="/tags/aglio">aglio(1)</a></br><a href="/tags/blog">blog(1)</a></br><a href="/tags/liteIDE">liteIDE(1)</a></br><a href="/tags/metaprogramming">metaprogramming(1)</a></br><a href="/tags/BusyBox">BusyBox(1)</a></br><a href="/tags/杂谈">杂谈(1)</a></br><a href="/tags/thrift">thrift(1)</a></br><a href="/tags/rkt">rkt(1)</a></br><a href="/tags/ssl">ssl(2)</a></br><a href="/tags/letsencrypt">letsencrypt(1)</a></br><a href="/tags/consul">consul(1)</a></br><a href="/tags/mongodb">mongodb(3)</a></br><a href="/tags/busybox">busybox(1)</a></br><a href="/tags/coreos">coreos(1)</a></br><a href="/tags/GC">GC(1)</a></br><a href="/tags/Linux">Linux(13)</a></br><a href="/tags/ShadowSocks">ShadowSocks(1)</a></br><a href="/tags/registry">registry(3)</a></br><a href="/tags/CoreOS">CoreOS(1)</a></br><a href="/tags/netplan">netplan(1)</a></br><a href="/tags/godoc">godoc(1)</a></br><a href="/tags/osx">osx(4)</a></br><a href="/tags/datatables">datatables(1)</a></br><a href="/tags/StackStorm2">StackStorm2(1)</a></br><a href="/tags/tenxcloud">tenxcloud(1)</a></br><a href="/tags/shell">shell(6)</a></br>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+
+                        <!-- Side Widget Well -->
+                        <div class="well">
+                            <h4>近期文章</h4>
+                            <a href="/2021/03/14/metaprogramming/">Metaprogramming and code generation/replace in action</a></br><a href="/2021/02/15/dockerprivateregistryen/">deploy docker registry under private network</a></br><a href="/2021/02/14/golangvimdev/">my vim golang programming environment</a></br><a href="/2021/02/06/bazelmacro/">bazel macro 的开发</a></br><a href="/2021/01/15/bazelboost/">bazel 使用经验和记录</a></br><a href="/2021/01/14/dockerprivateregistry/">小型团队内网创建docker registry</a></br><a href="/2021/01/14/ubuntudnssystemdresolved/">网关服务器部署DNS的冲突问题解决</a></br><a href="/2021/01/13/iptablesredsocksdocker/">iptables 使用 Redsocks 时候 Docker 没有网络问题的分析</a></br>
+                        </div>
+                        <div class="well">
+                            <h4>友情链接</h4>
+                            <a href="https://linux.cn/">Linux中国</a></br>
+                            <a href="http://locez.com/">LOCEZ</a></br>
+                            <a href="http://blog.ibeats.top/">CI_Knight</a>
+                        </div>
+
+                </div>
+
+            </div>
+            <!-- /.row -->
+
+            <hr>
+
+            <!-- Footer -->
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Copyright &copy; philo.top PowerBy <a href="https://github.com/lijianying10/RollingBlog">RollingBlog</a> 2020 Since 2015</p>
+                        <!-- Global site tag (gtag.js) - Google Analytics -->
+                        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173403528-1"></script>
+                        <script>
+                          window.dataLayer = window.dataLayer || [];
+                          function gtag(){dataLayer.push(arguments);}
+                          gtag('js', new Date());
+                        
+                          gtag('config', 'UA-173403528-1');
+                        </script>
+
+                    </div>
+                </div>
+                <!-- /.row -->
+            </footer>
+
+        </div>
+        <!-- /.container -->
+
+        <!-- jQuery -->
+        <script src="/js/jquery.js"></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/prism.js"></script>
+
+    </body>
+
+</html>
+

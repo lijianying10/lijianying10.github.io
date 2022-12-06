@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>UCloud UFile 在使用中的坑</title>
+        <link href="/css/prism.css" rel="stylesheet">
+        <link href="/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/css/blog-post.css" rel="stylesheet">
+        <link href="/css/typo.css" rel="stylesheet">
+        <link rel="shortcut icon" href="/favicon.ico" />
+    </head>
+
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Philo</a>
+                </div>
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/">HOME</a>
+                        </li>
+                        <li>
+                            <a href="/archive/">Archive</a>
+                        </li>
+                        <li>
+                            <a href="/2015/02/21/index/index.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container -->
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container" style="
+                margin-top: 70px;
+                ">
+
+            <div class="row">
+
+                <!-- Blog Post Content Column -->
+                <div class="col-lg-9 col-12">
+
+                    <!-- Blog Post -->
+
+<!-- Title -->
+<h1><a href="/2015/11/04/UFileTest/">UCloud UFile 在使用中的坑</a></h1>
+ 
+<!-- Author -->
+<p class="lead">
+Tags
+
+<a href="/tags/ucloud">ucloud</a>
+
+<a href="/tags/storage">storage</a>
+
+</p>
+
+<hr>
+
+<!-- Date/Time -->
+<p><span class="glyphicon glyphicon-time"></span> 2015-11-04 20:58:29</p>
+
+<hr>
+
+<div class="typo">
+<h2>使用UFile的意义</h2>
+
+<ol>
+<li>内网传输速度很快。</li>
+<li>价格还算可以接受。</li>
+<li>对于传输文件来说可以不用占用服务器的带宽对线上服务的质量来说非常划算。</li>
+</ol>
+
+<h2>传输速度</h2>
+
+<ol>
+<li>机房内部：18mb/s</li>
+<li>aws cn 到北京BGP 机房12mb/s</li>
+</ol>
+
+<p>的确对数据量不大的线上服务器来说，数据库之类的都算是非常合理了。</p>
+
+<h2>主要的问题是UCloud文档做的不是很好</h2>
+
+<ol>
+<li>如果一旦出现问题之后找到销售了，他们会带你看到一个技术人员。</li>
+<li>然而这个技术人员基本上就是为了帮真正技术人员挡掉比较简单的问题的。
+
+<ol>
+<li>他们的法宝： 重置，重启。</li>
+<li>在很详细的问题上他从来都回答不上来。比如说UFile上传的MPUT默认分片的单位是多少。他们连单位都不知道，应该是没用过。</li>
+<li>固定的配置放在什么地方他们都不知道，以及机房内的配置他们自己都不看文档。</li>
+<li>所以千万不要相信销售人员推荐的所谓的技术人员，坑你没商量</li>
+<li>他们不会看自己产品的日志，应该是没看懂？还是我点子比较背这我就不清楚了。</li>
+</ol></li>
+<li>要有耐心，等技术人员判断这不是一个自己能解决的问题，然后就会找技术更好的。</li>
+<li>我为了解决这个问题大概花了<code>3</code>个小时的时间，因为来回找人找了3层，他们每层人都有自己的判断。</li>
+<li>我问的问题是：UFile 北京BGP C机房的SPark proxy服务器地址是多少。（因为我要内网使用）</li>
+</ol>
+
+<h2>文档主要入口在这里：</h2>
+
+<p><a href="https://consolev3.ucloud.cn/ufile/tools">https://consolev3.ucloud.cn/ufile/tools</a></p>
+
+<h2>之后的步骤以及建议</h2>
+
+<ol>
+<li>下载里面的工具</li>
+<li>然后读文档：<a href="https://docs.ucloud.cn/upd-docs/ufile/tools.html">https://docs.ucloud.cn/upd-docs/ufile/tools.html</a></li>
+<li>然后配置</li>
+<li>然后结合自己项目上的自动化脚本执行就可以了</li>
+</ol>
+
+<h2>使用步骤上的注意事项：</h2>
+
+<ol>
+<li>它是分两种的，一种叫空间管理一种叫内容管理如果是备份传输文件直接使用内容管理就行了,如果你需要快速跳转点<a href="https://docs.ucloud.cn/upd-docs/ufile/tools.html#id5">这里</a></li>
+<li>稍微看一眼命令，基本上就明白啥意思了。</li>
+<li>下面的例子是你主要参考的地方。</li>
+<li>配置文件千万不要搞错了哦。</li>
+<li>如果你需要内网访问UFile请查看链接：<a href="https://docs.ucloud.cn/upd-docs/ufile/faq.html#id5">https://docs.ucloud.cn/upd-docs/ufile/faq.html#id5</a>请注意哦。这里不是API文档，是产品文档，而且还是产品文档的FAQ当技术人员找到文档之后我整个人都感觉崩溃了。不好了。笑尿了。</li>
+
+<li><p>说明书上的空间跟Console里面的空间不是一个名词哦，要注意,控制台中的名词叫做空间域名比如说 <code>xxxx.ufile.ucloud.cn</code> 当我们在使用命令bucket 参数的时候要填写<code>xxxx</code>不然不好使</p>
+
+<h2>最后</h2></li>
+</ol>
+
+<p>UCloud 跟阿里云和青云比起来确实比较贵。但是UCloud的销售貌似因为华三交换机的问题很看不起青云。虽然我不是很懂。
+另外，自己开服务器玩的小伙伴们，就不要考虑UCloud了。因为他们只给企业用户用。
+送UCloud的话：运维不易，且行且珍惜。</p>
+
+<p>最后送个UCloud良心销售微信一枚：<code>DEMO1220</code> 是个漂亮妹子哦。</p>
+
+</div>
+
+<hr>
+本人博客文章采用<a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC Attribution-NonCommercial协议</a>: CC Attribution-NonCommercial 必须保留原作者署名,并且不允许用于商业用途,其他行为都是允许的。
+<hr>
+
+<script src="https://utteranc.es/client.js"
+        repo="lijianying10/RollingBlog"
+        issue-term="UCloud UFile 在使用中的坑"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2015/11/04/UFileTest/" data-title="UCloud UFile 在使用中的坑" data-url="http://www.philo.top/2015/11/04/UFileTest/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"philotop"};
+(function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+})();
+</script>
+<!-- 多说公共JS代码 end -->
+
+<hr>
+
+                </div>
+
+                <!-- Blog Sidebar Widgets Column -->
+                <div class="col-lg-3 col-12">
+
+                    <!-- Blog Search Well -->
+                    <!--                 <div class="well">
+                        <h4>Blog Search</h4>
+                        <div class="input-group">
+                        <input type="text" class="form-control">
+                        <span class="input-group-btn">
+                        <button class="btn btn-default" type="button">
+                        <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        </span>
+                        </div> -->
+                        <!-- /.input-group -->
+                        <!-- </div> -->
+
+                        <!-- Blog Categories Well -->
+                        <div class="well">
+                            <h4>TAGS</h4>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/wiki">wiki(2)</a></br><a href="/tags/thinking">thinking(3)</a></br><a href="/tags/node">node(1)</a></br><a href="/tags/iptables">iptables(1)</a></br><a href="/tags/devenv">devenv(1)</a></br><a href="/tags/elk">elk(1)</a></br><a href="/tags/oop">oop(1)</a></br><a href="/tags/html">html(1)</a></br><a href="/tags/mesos">mesos(1)</a></br><a href="/tags/tmux">tmux(1)</a></br><a href="/tags/git">git(8)</a></br><a href="/tags/nodejs">nodejs(1)</a></br><a href="/tags/DaoCloud">DaoCloud(1)</a></br><a href="/tags/java">java(2)</a></br><a href="/tags/visualization">visualization(1)</a></br><a href="/tags/elasticsearch">elasticsearch(1)</a></br><a href="/tags/requirejs">requirejs(1)</a></br><a href="/tags/network">network(2)</a></br><a href="/tags/dns">dns(1)</a></br><a href="/tags/ss">ss(1)</a></br><a href="/tags/css">css(1)</a></br><a href="/tags/docker">docker(22)</a></br><a href="/tags/centos">centos(1)</a></br><a href="/tags/mysql">mysql(3)</a></br><a href="/tags/grub">grub(1)</a></br><a href="/tags/butterfly">butterfly(1)</a></br><a href="/tags/web">web(3)</a></br><a href="/tags/php">php(1)</a></br><a href="/tags/mongodab">mongodab(1)</a></br><a href="/tags/putty">putty(2)</a></br><a href="/tags/RHEL">RHEL(1)</a></br><a href="/tags/PXE">PXE(1)</a></br><a href="/tags/ci">ci(1)</a></br><a href="/tags/iPXE">iPXE(1)</a></br><a href="/tags/gh60">gh60(1)</a></br><a href="/tags/env">env(2)</a></br><a href="/tags/DES">DES(1)</a></br><a href="/tags/microservice">microservice(2)</a></br><a href="/tags/Ubuntu">Ubuntu(1)</a></br><a href="/tags/logstash">logstash(1)</a></br><a href="/tags/c">c(1)</a></br><a href="/tags/marathon">marathon(1)</a></br><a href="/tags/owncloud">owncloud(1)</a></br><a href="/tags/npm">npm(1)</a></br><a href="/tags/virtualbox">virtualbox(3)</a></br><a href="/tags/python">python(4)</a></br><a href="/tags/delegate">delegate(1)</a></br><a href="/tags/mac">mac(2)</a></br><a href="/tags/tray">tray(1)</a></br><a href="/tags/require.js">require.js(1)</a></br><a href="/tags/etcd">etcd(3)</a></br><a href="/tags/postgresql">postgresql(1)</a></br><a href="/tags/systemd-resolved">systemd-resolved(1)</a></br><a href="/tags/js">js(8)</a></br><a href="/tags/phpExtension">phpExtension(1)</a></br><a href="/tags/rancher">rancher(2)</a></br><a href="/tags/html5">html5(1)</a></br><a href="/tags/test">test(1)</a></br>
+                                    </ul>
+                                </div>
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/homebrew">homebrew(1)</a></br><a href="/tags/linux">linux(5)</a></br><a href="/tags/macos">macos(1)</a></br><a href="/tags/Cow">Cow(1)</a></br><a href="/tags/yaml">yaml(1)</a></br><a href="/tags/golang">golang(23)</a></br><a href="/tags/ucloud">ucloud(1)</a></br><a href="/tags/redsocks">redsocks(1)</a></br><a href="/tags/article">article(1)</a></br><a href="/tags/Docker">Docker(2)</a></br><a href="/tags/minecraft">minecraft(2)</a></br><a href="/tags/vim">vim(3)</a></br><a href="/tags/storage">storage(1)</a></br><a href="/tags/atom">atom(2)</a></br><a href="/tags/MongoDB">MongoDB(1)</a></br><a href="/tags/runc">runc(1)</a></br><a href="/tags/bootstrap">bootstrap(1)</a></br><a href="/tags/HomeBrew">HomeBrew(1)</a></br><a href="/tags/iterm2">iterm2(1)</a></br><a href="/tags/flannel">flannel(1)</a></br><a href="/tags/RunC">RunC(1)</a></br><a href="/tags/bazel">bazel(2)</a></br><a href="/tags/dev">dev(2)</a></br><a href="/tags/profiling">profiling(2)</a></br><a href="/tags/kibina">kibina(1)</a></br><a href="/tags/android">android(1)</a></br><a href="/tags/hexo">hexo(3)</a></br><a href="/tags/nginx">nginx(6)</a></br><a href="/tags/ubuntu">ubuntu(5)</a></br><a href="/tags/career">career(1)</a></br><a href="/tags/syslinux">syslinux(1)</a></br><a href="/tags/aglio">aglio(1)</a></br><a href="/tags/blog">blog(1)</a></br><a href="/tags/liteIDE">liteIDE(1)</a></br><a href="/tags/metaprogramming">metaprogramming(1)</a></br><a href="/tags/BusyBox">BusyBox(1)</a></br><a href="/tags/杂谈">杂谈(1)</a></br><a href="/tags/thrift">thrift(1)</a></br><a href="/tags/rkt">rkt(1)</a></br><a href="/tags/ssl">ssl(2)</a></br><a href="/tags/letsencrypt">letsencrypt(1)</a></br><a href="/tags/consul">consul(1)</a></br><a href="/tags/mongodb">mongodb(3)</a></br><a href="/tags/busybox">busybox(1)</a></br><a href="/tags/coreos">coreos(1)</a></br><a href="/tags/GC">GC(1)</a></br><a href="/tags/Linux">Linux(13)</a></br><a href="/tags/ShadowSocks">ShadowSocks(1)</a></br><a href="/tags/registry">registry(3)</a></br><a href="/tags/CoreOS">CoreOS(1)</a></br><a href="/tags/netplan">netplan(1)</a></br><a href="/tags/godoc">godoc(1)</a></br><a href="/tags/osx">osx(4)</a></br><a href="/tags/datatables">datatables(1)</a></br><a href="/tags/StackStorm2">StackStorm2(1)</a></br><a href="/tags/tenxcloud">tenxcloud(1)</a></br><a href="/tags/shell">shell(6)</a></br>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+
+                        <!-- Side Widget Well -->
+                        <div class="well">
+                            <h4>近期文章</h4>
+                            <a href="/2021/03/14/metaprogramming/">Metaprogramming and code generation/replace in action</a></br><a href="/2021/02/15/dockerprivateregistryen/">deploy docker registry under private network</a></br><a href="/2021/02/14/golangvimdev/">my vim golang programming environment</a></br><a href="/2021/02/06/bazelmacro/">bazel macro 的开发</a></br><a href="/2021/01/15/bazelboost/">bazel 使用经验和记录</a></br><a href="/2021/01/14/dockerprivateregistry/">小型团队内网创建docker registry</a></br><a href="/2021/01/14/ubuntudnssystemdresolved/">网关服务器部署DNS的冲突问题解决</a></br><a href="/2021/01/13/iptablesredsocksdocker/">iptables 使用 Redsocks 时候 Docker 没有网络问题的分析</a></br>
+                        </div>
+                        <div class="well">
+                            <h4>友情链接</h4>
+                            <a href="https://linux.cn/">Linux中国</a></br>
+                            <a href="http://locez.com/">LOCEZ</a></br>
+                            <a href="http://blog.ibeats.top/">CI_Knight</a>
+                        </div>
+
+                </div>
+
+            </div>
+            <!-- /.row -->
+
+            <hr>
+
+            <!-- Footer -->
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Copyright &copy; philo.top PowerBy <a href="https://github.com/lijianying10/RollingBlog">RollingBlog</a> 2020 Since 2015</p>
+                        <!-- Global site tag (gtag.js) - Google Analytics -->
+                        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173403528-1"></script>
+                        <script>
+                          window.dataLayer = window.dataLayer || [];
+                          function gtag(){dataLayer.push(arguments);}
+                          gtag('js', new Date());
+                        
+                          gtag('config', 'UA-173403528-1');
+                        </script>
+
+                    </div>
+                </div>
+                <!-- /.row -->
+            </footer>
+
+        </div>
+        <!-- /.container -->
+
+        <!-- jQuery -->
+        <script src="/js/jquery.js"></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/prism.js"></script>
+
+    </body>
+
+</html>
+

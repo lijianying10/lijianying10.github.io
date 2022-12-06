@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>CoreOS在PC上快速安装上手</title>
+        <link href="/css/prism.css" rel="stylesheet">
+        <link href="/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/css/blog-post.css" rel="stylesheet">
+        <link href="/css/typo.css" rel="stylesheet">
+        <link rel="shortcut icon" href="/favicon.ico" />
+    </head>
+
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Philo</a>
+                </div>
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/">HOME</a>
+                        </li>
+                        <li>
+                            <a href="/archive/">Archive</a>
+                        </li>
+                        <li>
+                            <a href="/2015/02/21/index/index.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container -->
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container" style="
+                margin-top: 70px;
+                ">
+
+            <div class="row">
+
+                <!-- Blog Post Content Column -->
+                <div class="col-lg-9 col-12">
+
+                    <!-- Blog Post -->
+
+<!-- Title -->
+<h1><a href="/2015/07/16/pc-docker/">CoreOS在PC上快速安装上手</a></h1>
+ 
+<!-- Author -->
+<p class="lead">
+Tags
+
+<a href="/tags/CoreOS">CoreOS</a>
+
+<a href="/tags/docker">docker</a>
+
+</p>
+
+<hr>
+
+<!-- Date/Time -->
+<p><span class="glyphicon glyphicon-time"></span> 2015-07-16 17:54:11</p>
+
+<hr>
+
+<div class="typo">
+<p>Version:2</p>
+
+<p><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxQTERUSExQVFBQXGBwXGBgXFxgaHhohGhciFhgaGxgYHSogHBwoIB0fIT0kJSksLi4uFx8zODMsNygtLisBCgoKDg0OGhAQGzAlICYvLjcsKzQsLCwwLSwsLCwsLDQsNzUsLCwsLCwsLCwsKyw0LCwsLCwsLCwsLCwsLCwsLP/AABEIAEQAsAMBEQACEQEDEQH/xAAbAAEAAgMBAQAAAAAAAAAAAAAABQYDBAcBAv/EADYQAAEDAgMGBAQFBAMAAAAAAAEAAgMEEQUSIQYxQVFhcQcTIpEygaHBFEJSsdFiksLhCBWy/8QAGwEBAAIDAQEAAAAAAAAAAAAAAAIDAQQFBgf/xAAwEQACAgEDAgQFAgcBAAAAAAAAAQIDEQQhMRJBBVFhgSJCcZGhEzIjJDOx0eHxBv/aAAwDAQACEQMRAD8A7igCAIAgCAIAgCAIAgCAIAgCAIAgCAIAgCAIAgCA8c4AXJsBvJTkN4Ktim2LGkthbnP6joPlxP0W9Vom957GhbroraCyQcu11STo5o6Bo+6rvlp6X04bf1OjofD9ZrIfqdSjHtlcmek20mafW1rx/afcfwqlbp5+cfyX2+Fa6pZWJ/TZlswfHIqgek2dxad/y5hLKXDfleZowtUm4tYa5T5JNVFoQBAEAQBAEAQBAEAQBAEAQBAEAQFD2wxoveYGGzGmzv6j/AXU0lHSut8nJ1mocn0LgrJW1ZPog5eRr6el3WxrXdpHkUTnGzWlx5AE/svKtuTy+T6mlCmCjwlsj5c0g2IIPI6LBYmmso+4JnMcHNJBGoI4LY0+odTw94vlHN8S8Nhq4ZW01xL/AD6HTtnsVFRFm3PGjh159itq2tRe3D4PJ1zk8xmsSWzXqSiqLTxzgASTYDUkoCuybd4cH5DVw5t3xae+5AWCGVr2hzSHNIuCDcEcwQgPtAEAQBAEAQGjWYvDG7K94Dv0jU+wUXJI2K9LbYsxjt5majro5ReN4cBvtw7jgspp8ELaZ1PE1gyTztY0ue4NaN5JspRi5PCKZSUVlmnBjcDnBokFzuvcX7X3qx0WJZwVR1FbeEyQVRcauKVHlwyP4taSO9tFOuPVNIrtl0wcjk913jz545aWveKGdnwCClroZ7Zf4Lr4e0wDJJOJcGjsBf7/AEXFpW2T0vjNjcow9ycxvB2VDCHAB1vS7iD/AArJRUkc/S6qdEsrjujlssZaS06EEg9xoVqHroyUkmixbC1RbUZOD2ke2o+/uujTLr07T+V/hnkvF6lVrVNfOvyjoSrNQ4/4v4rNUVcOEwOyiTL5n9RefSHW/KACSON+iGUWSk8JsObD5bo3SPtrIXEOvzFtB2QwTGC4bT4RQlpkPlR3e57zqSTyG7sEBS5vGkXLo6GZ8DTYyZrW7gMLR2LghnBbTt5Tuw6TEIQ6RkfxR6NcDp6TfcdUMFbxPxjhZFE6GnfPK9md0Yfbyxyc4NNz2CGcErtR4kxUjmQthfPVPa0mFh+AuF8rnAE36AeyGD3ZLxHZVVH4WeCSkqPysebh3GwJa0g9CEBascqzFC5zfiNmt7uOUfuoyeEbGlqVlqjLjv8ARGTDKBsLMo1O9zjvceJJSMcIjffK2WXx2XkjRx6LywKpgs+P4rfmbf1A8+axPb4jY0kv1P4EuHx6PseYu9onp3SW8r1ancHEDIT9bLbpy4S6edvsci/Csj1cb/claiBsjS14DmngdVTGTi8ovlFSWGZGNsABuGii3kklgjtpGXpZQP039tVdp3iyJRqVmqRy9ds4R45aPiP9B+x3P/Ov+eX0ZadldoIYISyTNfMToL7wFxK7ElhnqfENDbfapQ8iRqdt4QPQx7z1s0e/+lJ3LsasPB7W/iaX5KRVTmSR0hFi4lxt11UI1WWP4Udeep0+lgozmlhee5LbHx3q2dLn6LqQ07ool1cvB5LxDxKGt1MFWvhjnfzz/wAOlLUMHFNo3in2ohlkNmOLLE7hmYYx9UMna0MHLf8AkDUObRQMHwvm9XXKwuaPfX5IZRdtkqGJuH08TQ0xmFtxbR2Zt3X53uUMHBMFPlw4xCzWIM/8TlrD7EoZOreCVBGzDWytaA+R7i93E5XFrRfkAhhnPdh8QrP+xrJ6emZVTlzs2d+XIDIQbc9wb8kMk/jWF4rW11JUyUTIHQPbdzJA67fMa43vyAP9xQHTdpzaEP4MkY49g4XUJ8G5oN7XHzTX4JdTNIjNpZLUsvVuUdSdAoT/AGs29DHOoh9f7G42nBjDHAOGUAg6g2CnFuPBq2Ym3nuRsmFviBdTPLba+U7Vh6Di35LYVqntYvfuarplDet+3b/RI4fVCWJkgFg4Xty6KqyHRJxLq5qcVJdzNIwOBadxFj81FPDySaysM5TiVEYZXRu4HQ8xwK7tc1OKkjgWVuuTizVUmk+SEZOLyngWUHTW/lX2L1rNQuLJfdhZVcFwl9iMtRbP902/dhTKS5bB4eRmncN/pb/kf2HuudrbOII6egq5m/YuC550Sm+I+wrMSiaQ4Rzx3yOIuCDvY7p14ICpwUu0kbPIa6NwAyiQlhIG4eo6+4QyT9NsBLJhb6OsqTLK55ka+1/KdvABOrhe978zuQwV2jwraCmg/BReU6MDK2TMLtHQnUfMaIZN+i8NH0+E1NOwtkq6gNzH4WjKbtYCeAuTfiSgLX4cYNLSYfHBOAJGl5IBuNXEjVDBVdoth6yCudiGFvZmfcvidpqfi36Fp320sUMkts6/GpKlj6oQQwNvnY3UvuOl9R3QwXeeEPaWOF2uFiO6NZJQk4SUlyiLp/xEA8vJ57Bo1wcGutwDgdD3uoLqW3JuT/QufXnpfdYyvY9bSyzPa+YBjGHM2MHMSeDnHdpyTDb3MOyumDjU8t8vjb0NitbM1+eIte21jG7T5tdwPdbEOhrEtvU5k1YnmO/oYZaioeMrYRGTpnc8HL1Abv8AopKNcXlvPoRcrZLCjj1yb1DSiKNsbdzRZVTk5ScmWwgoRUV2M6iTIjaHA21Lf0yN+F32PRbFF7qfoa2o06tXqc9rqGSF2WRpaeHI9jxXWhZGazFnHsrlB4kjWUyAQE/gOzT5iHSAsj673dv5Wpfqow2juzbo0kp7y2R0CGINaGtFgBYALlNtvLOwkksI+1gyEAQBAEAQBAEAQBAEAQBAEAQBAEB8TQtcMrgHDkRdZTaeUYcU1hkY/ZymJv5Q+Vx91ctTau5Q9LU+xsUuDwRm7I2g87XP1UZXWS5ZONFceEbyqLQgCAIAgCAIAgCAIAgCAIAgCAIAgCAIAgCAIAgCAIAgCAIAgCAIAgCAIAgCAIAgCA//2Q==" alt="" /></p>
+
+<h2>意义</h2>
+
+<p>能够以最快的速度安装部署Linux操作系统
+安装快速简单，几乎不花时间就可以开始运行Docker。
+运行速度非常快。使用内存硬盘。</p>
+
+<h2>我的情况。</h2>
+
+<p>win8 笔记本偶尔玩游戏，但是装Linux双系统可能需要我一天的时间来完成。
+我的所有业务都只需要在Docker中跑就可以了。
+而且我笔记本电脑内存够大16g （感谢HUST 姜老师）</p>
+
+<h2>准备</h2>
+
+<ol>
+<li>CoreOS image <a href="https://coreos.com/os/docs/latest/booting-with-iso.html">下载地址</a></li>
+<li>EasyBCD <a href="http://www.pc6.com/softview/SoftView_53180.html">下载地址</a></li>
+</ol>
+
+<h2>开工</h2>
+
+<ol>
+<li>安装EasyBCD添加ISO引导项文件直接使用CoreOS的livecd image
+详细步骤带截图：<a href="http://jingyan.baidu.com/article/466506586ed309f549e5f81c.html">http://jingyan.baidu.com/article/466506586ed309f549e5f81c.html</a></li>
+<li>启动CoreOS完成CoreOS安装</li>
+</ol>
+
+<h2>更新</h2>
+
+<p>只需要给启动用的ISO文件更新即可。</p>
+
+<h2>缺点</h2>
+
+<ol>
+<li>不能持久化（带来的优点，玩坏了，直接重启即可）</li>
+<li>整个操作系统都在硬盘中生成的文件直接占用硬盘空间（带来的优点，硬盘速度提升非常高）</li>
+<li>每次开机手动挂载硬盘空间，手动运行整个系统的初始化脚本。</li>
+</ol>
+
+<p>结合优缺点这里建议这套配置给有确定业务的工作来做还可以，如果业务比较多，可能需要优化的点比较多。</p>
+
+<h2>配置</h2>
+
+<ol>
+<li>在硬盘上开一个100g大小的空间，并格式化,参考命令：<code>mkfs.ext4 /dev/sda2</code> 然后挂载
+如果您不明白如何分区格式化并且挂载请看考这里<a href="https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Disks">https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Disks</a>
+这篇文章可以说是我见过关于初级磁盘管理最好的一篇文章了。</li>
+
+<li><p>挂载之后复制 文件夹<code>/var/lib/docker/</code> 到挂载的位置在软连接回去。（然后docker images就可以持久化放到硬盘里面了重启不会丢失）参考操作如下：</p>
+
+<pre><code>cp -rf /var/lib/docker /mnt/
+rm -rf /var/lib/docker
+ln -s /mnt/docker /var/lib/docker
+</code></pre></li>
+</ol>
+
+<h2>我的初始化文件参考</h2>
+
+<pre><code>mkdir /root/.ssh
+echo &quot;ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDcTvSn5METOJUKXRr+Sa92eL2PRZlHb5tdKMublwgvHWaYNxJyXrxCARmBCy8VAo6rb/OeTsyuMWjZ7fVpxKc32ZkcBoIRL7YNkAonO8nHMSLvWUSKkwo7wfWubJhBQtDjvJ40WIcECrFkssFxbcl9YuUeZjdclmcylBkfwzdHJl7c3NtOjtCosN1RUDQZZJEJzKpSNcYtX/D1fPY9MovDWAeQ+xcLb6Gy5rnCTfyGgZDowyDpFNNe+j0a9G1zjlEww3GvOD/UUIf7hDaji+HjO8/sLfHjfAWWULStoEl/aUoofs93QVQFxCPOeYnZR/QL8MkfXQmwme7Nv7xBeqrt Li-jianying@lijianyings-MacBook-Pro.local&quot; &gt; /root/.ssh/authorized_keys
+
+rm -rf /var/lib/docker
+ln -s /mnt/docker /var/lib/docker
+#echo 'DOCKER_OPTS=&quot;--registry-mirror=http://XXXXX.m.daocloud.io&quot;' &gt;&gt; /run/flannel_docker_opts.env
+#systemctl daemon-reload
+systemctl restart docker
+# using disk
+</code></pre>
+
+<p>先导入rsakey，然后软连接到docker位置
+添加daocloud 加速（官方虽然没写CoreOS怎么加速，但是有大神给出了方法）
+因为我不加速比加速快所以这里就先注释掉。作为备选方案。</p>
+
+<h2>systemd遇到的坑</h2>
+
+<p>如果docker中返回错误-1容器就会挂掉。但是systemd中还存在scope。
+当启动问题容器会提示</p>
+
+<pre><code>Error response from daemon: Cannot start container test: [8] System error: Unit docker-e10eb86807cd9971fc03a8eee732771193d506ed2ba678fdf4292916a9fb072c.scope already exists.
+</code></pre>
+
+<p>那么</p>
+
+<pre><code>systemctl stop docker-e10eb86807cd9971fc03a8eee732771193d506ed2ba678fdf4292916a9fb072c.scope
+</code></pre>
+
+<p>就可以搞定。</p>
+
+<h2>CoreOS.iso 遇到的坑2</h2>
+
+<p>不断确认KnowHosts
+参考解决<a href="https://github.com/lijianying10/FixLinux/blob/master/note/%E5%8F%96%E6%B6%88sshPublicKeyKnowHost%E8%AE%A4%E8%AF%81.md">https://github.com/lijianying10/FixLinux/blob/master/note/取消sshPublicKeyKnowHost认证.md</a></p>
+
+<p>##总结
+用这种方法在PC中部署Linux实在是太方便了。熟悉Docker一套的这种想法可能20分钟就可以根据自己的情况搞定。
+我找到了这个思路之后经过各种权衡。
+1. 为了快速解决引导问题 用EasyBCD 直接引导内存ISO启动 <code>换</code> 折腾UEFI Grub的问题
+2. 为了减少配置环境带来的时间成本从普通安装到硬盘里面的发型版本 <code>换</code> CoreOS
+3. 为了避免错误操作Or版本升级给系统带来的不稳定因素 <code>换</code> Docker
+4. 在<code>未来</code>也许 <code>换</code> RKT,RunC(希望大婶们快点填坑，RunC说这个月Release不知道会不会跳票)
+5. 注意本方案是<code>不惜一切代价</code>用最简洁的环境配置来换开发时间。完美主义喜欢折腾的小伙伴可能要绕行了。</p>
+
+</div>
+
+<hr>
+本人博客文章采用<a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC Attribution-NonCommercial协议</a>: CC Attribution-NonCommercial 必须保留原作者署名,并且不允许用于商业用途,其他行为都是允许的。
+<hr>
+
+<script src="https://utteranc.es/client.js"
+        repo="lijianying10/RollingBlog"
+        issue-term="CoreOS在PC上快速安装上手"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2015/07/16/pc-docker/" data-title="CoreOS在PC上快速安装上手" data-url="http://www.philo.top/2015/07/16/pc-docker/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"philotop"};
+(function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+})();
+</script>
+<!-- 多说公共JS代码 end -->
+
+<hr>
+
+                </div>
+
+                <!-- Blog Sidebar Widgets Column -->
+                <div class="col-lg-3 col-12">
+
+                    <!-- Blog Search Well -->
+                    <!--                 <div class="well">
+                        <h4>Blog Search</h4>
+                        <div class="input-group">
+                        <input type="text" class="form-control">
+                        <span class="input-group-btn">
+                        <button class="btn btn-default" type="button">
+                        <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        </span>
+                        </div> -->
+                        <!-- /.input-group -->
+                        <!-- </div> -->
+
+                        <!-- Blog Categories Well -->
+                        <div class="well">
+                            <h4>TAGS</h4>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/wiki">wiki(2)</a></br><a href="/tags/thinking">thinking(3)</a></br><a href="/tags/node">node(1)</a></br><a href="/tags/iptables">iptables(1)</a></br><a href="/tags/devenv">devenv(1)</a></br><a href="/tags/elk">elk(1)</a></br><a href="/tags/oop">oop(1)</a></br><a href="/tags/html">html(1)</a></br><a href="/tags/mesos">mesos(1)</a></br><a href="/tags/tmux">tmux(1)</a></br><a href="/tags/git">git(8)</a></br><a href="/tags/nodejs">nodejs(1)</a></br><a href="/tags/DaoCloud">DaoCloud(1)</a></br><a href="/tags/java">java(2)</a></br><a href="/tags/visualization">visualization(1)</a></br><a href="/tags/elasticsearch">elasticsearch(1)</a></br><a href="/tags/requirejs">requirejs(1)</a></br><a href="/tags/network">network(2)</a></br><a href="/tags/dns">dns(1)</a></br><a href="/tags/ss">ss(1)</a></br><a href="/tags/css">css(1)</a></br><a href="/tags/docker">docker(22)</a></br><a href="/tags/centos">centos(1)</a></br><a href="/tags/mysql">mysql(3)</a></br><a href="/tags/grub">grub(1)</a></br><a href="/tags/butterfly">butterfly(1)</a></br><a href="/tags/web">web(3)</a></br><a href="/tags/php">php(1)</a></br><a href="/tags/mongodab">mongodab(1)</a></br><a href="/tags/putty">putty(2)</a></br><a href="/tags/RHEL">RHEL(1)</a></br><a href="/tags/PXE">PXE(1)</a></br><a href="/tags/ci">ci(1)</a></br><a href="/tags/iPXE">iPXE(1)</a></br><a href="/tags/gh60">gh60(1)</a></br><a href="/tags/env">env(2)</a></br><a href="/tags/DES">DES(1)</a></br><a href="/tags/microservice">microservice(2)</a></br><a href="/tags/Ubuntu">Ubuntu(1)</a></br><a href="/tags/logstash">logstash(1)</a></br><a href="/tags/c">c(1)</a></br><a href="/tags/marathon">marathon(1)</a></br><a href="/tags/owncloud">owncloud(1)</a></br><a href="/tags/npm">npm(1)</a></br><a href="/tags/virtualbox">virtualbox(3)</a></br><a href="/tags/python">python(4)</a></br><a href="/tags/delegate">delegate(1)</a></br><a href="/tags/mac">mac(2)</a></br><a href="/tags/tray">tray(1)</a></br><a href="/tags/require.js">require.js(1)</a></br><a href="/tags/etcd">etcd(3)</a></br><a href="/tags/postgresql">postgresql(1)</a></br><a href="/tags/systemd-resolved">systemd-resolved(1)</a></br><a href="/tags/js">js(8)</a></br><a href="/tags/phpExtension">phpExtension(1)</a></br><a href="/tags/rancher">rancher(2)</a></br><a href="/tags/html5">html5(1)</a></br><a href="/tags/test">test(1)</a></br>
+                                    </ul>
+                                </div>
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/homebrew">homebrew(1)</a></br><a href="/tags/linux">linux(5)</a></br><a href="/tags/macos">macos(1)</a></br><a href="/tags/Cow">Cow(1)</a></br><a href="/tags/yaml">yaml(1)</a></br><a href="/tags/golang">golang(23)</a></br><a href="/tags/ucloud">ucloud(1)</a></br><a href="/tags/redsocks">redsocks(1)</a></br><a href="/tags/article">article(1)</a></br><a href="/tags/Docker">Docker(2)</a></br><a href="/tags/minecraft">minecraft(2)</a></br><a href="/tags/vim">vim(3)</a></br><a href="/tags/storage">storage(1)</a></br><a href="/tags/atom">atom(2)</a></br><a href="/tags/MongoDB">MongoDB(1)</a></br><a href="/tags/runc">runc(1)</a></br><a href="/tags/bootstrap">bootstrap(1)</a></br><a href="/tags/HomeBrew">HomeBrew(1)</a></br><a href="/tags/iterm2">iterm2(1)</a></br><a href="/tags/flannel">flannel(1)</a></br><a href="/tags/RunC">RunC(1)</a></br><a href="/tags/bazel">bazel(2)</a></br><a href="/tags/dev">dev(2)</a></br><a href="/tags/profiling">profiling(2)</a></br><a href="/tags/kibina">kibina(1)</a></br><a href="/tags/android">android(1)</a></br><a href="/tags/hexo">hexo(3)</a></br><a href="/tags/nginx">nginx(6)</a></br><a href="/tags/ubuntu">ubuntu(5)</a></br><a href="/tags/career">career(1)</a></br><a href="/tags/syslinux">syslinux(1)</a></br><a href="/tags/aglio">aglio(1)</a></br><a href="/tags/blog">blog(1)</a></br><a href="/tags/liteIDE">liteIDE(1)</a></br><a href="/tags/metaprogramming">metaprogramming(1)</a></br><a href="/tags/BusyBox">BusyBox(1)</a></br><a href="/tags/杂谈">杂谈(1)</a></br><a href="/tags/thrift">thrift(1)</a></br><a href="/tags/rkt">rkt(1)</a></br><a href="/tags/ssl">ssl(2)</a></br><a href="/tags/letsencrypt">letsencrypt(1)</a></br><a href="/tags/consul">consul(1)</a></br><a href="/tags/mongodb">mongodb(3)</a></br><a href="/tags/busybox">busybox(1)</a></br><a href="/tags/coreos">coreos(1)</a></br><a href="/tags/GC">GC(1)</a></br><a href="/tags/Linux">Linux(13)</a></br><a href="/tags/ShadowSocks">ShadowSocks(1)</a></br><a href="/tags/registry">registry(3)</a></br><a href="/tags/CoreOS">CoreOS(1)</a></br><a href="/tags/netplan">netplan(1)</a></br><a href="/tags/godoc">godoc(1)</a></br><a href="/tags/osx">osx(4)</a></br><a href="/tags/datatables">datatables(1)</a></br><a href="/tags/StackStorm2">StackStorm2(1)</a></br><a href="/tags/tenxcloud">tenxcloud(1)</a></br><a href="/tags/shell">shell(6)</a></br>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+
+                        <!-- Side Widget Well -->
+                        <div class="well">
+                            <h4>近期文章</h4>
+                            <a href="/2021/03/14/metaprogramming/">Metaprogramming and code generation/replace in action</a></br><a href="/2021/02/15/dockerprivateregistryen/">deploy docker registry under private network</a></br><a href="/2021/02/14/golangvimdev/">my vim golang programming environment</a></br><a href="/2021/02/06/bazelmacro/">bazel macro 的开发</a></br><a href="/2021/01/15/bazelboost/">bazel 使用经验和记录</a></br><a href="/2021/01/14/dockerprivateregistry/">小型团队内网创建docker registry</a></br><a href="/2021/01/14/ubuntudnssystemdresolved/">网关服务器部署DNS的冲突问题解决</a></br><a href="/2021/01/13/iptablesredsocksdocker/">iptables 使用 Redsocks 时候 Docker 没有网络问题的分析</a></br>
+                        </div>
+                        <div class="well">
+                            <h4>友情链接</h4>
+                            <a href="https://linux.cn/">Linux中国</a></br>
+                            <a href="http://locez.com/">LOCEZ</a></br>
+                            <a href="http://blog.ibeats.top/">CI_Knight</a>
+                        </div>
+
+                </div>
+
+            </div>
+            <!-- /.row -->
+
+            <hr>
+
+            <!-- Footer -->
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Copyright &copy; philo.top PowerBy <a href="https://github.com/lijianying10/RollingBlog">RollingBlog</a> 2020 Since 2015</p>
+                        <!-- Global site tag (gtag.js) - Google Analytics -->
+                        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173403528-1"></script>
+                        <script>
+                          window.dataLayer = window.dataLayer || [];
+                          function gtag(){dataLayer.push(arguments);}
+                          gtag('js', new Date());
+                        
+                          gtag('config', 'UA-173403528-1');
+                        </script>
+
+                    </div>
+                </div>
+                <!-- /.row -->
+            </footer>
+
+        </div>
+        <!-- /.container -->
+
+        <!-- jQuery -->
+        <script src="/js/jquery.js"></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/prism.js"></script>
+
+    </body>
+
+</html>
+

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>RancherOS iPXE 启动以及ISO重新打包的方法</title>
+        <link href="/css/prism.css" rel="stylesheet">
+        <link href="/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/css/blog-post.css" rel="stylesheet">
+        <link href="/css/typo.css" rel="stylesheet">
+        <link rel="shortcut icon" href="/favicon.ico" />
+    </head>
+
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Philo</a>
+                </div>
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/">HOME</a>
+                        </li>
+                        <li>
+                            <a href="/archive/">Archive</a>
+                        </li>
+                        <li>
+                            <a href="/2015/02/21/index/index.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container -->
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container" style="
+                margin-top: 70px;
+                ">
+
+            <div class="row">
+
+                <!-- Blog Post Content Column -->
+                <div class="col-lg-9 col-12">
+
+                    <!-- Blog Post -->
+
+<!-- Title -->
+<h1><a href="/2016/06/11/RancherOSBootMethod/">RancherOS iPXE 启动以及ISO重新打包的方法</a></h1>
+ 
+<!-- Author -->
+<p class="lead">
+Tags
+
+<a href="/tags/rancher">rancher</a>
+
+<a href="/tags/docker">docker</a>
+
+<a href="/tags/linux">linux</a>
+
+<a href="/tags/iPXE">iPXE</a>
+
+<a href="/tags/PXE">PXE</a>
+
+<a href="/tags/syslinux">syslinux</a>
+
+<a href="/tags/virtualbox">virtualbox</a>
+
+</p>
+
+<hr>
+
+<!-- Date/Time -->
+<p><span class="glyphicon glyphicon-time"></span> 2016-06-11 22:32:57</p>
+
+<hr>
+
+<div class="typo">
+<h3>VER: 1</h3>
+
+<p><img src="http://rancher.com/wp-content/themes/rancher-2016/assets/images/rancheros-docker-kernel.png" alt="" /></p>
+
+<h2>意义</h2>
+
+<p>最近一直在尝试自己写一服务器平台方便自己和别人开发的，能把流程做进去最好了。
+但是万事开头难，在尝试了CoreOS iPXE 启动方法之后发现Image太大大概要200mb+的样子。
+Boot2Docker始终没找到正确的看文档的方式，这种方法我个人预估也只能是Docker ToolBox使用比较靠谱了。
+然后开始尝试RancherOS的IPXE启动操作系统但是但是很不稳定，有的时候Cloud-init下载不了。
+大概2次就有一次无法启动不能忍，但是不用cloud-init还好，但是也是去了在我这里使用的意义。
+这种只适合大规模的集群部署。不得不说他们的工作真的很赞。</p>
+
+<p>那么要满足我的需求：</p>
+
+<ol>
+<li>Image 要小</li>
+<li>开机迅速，可定制。各种系统配置。</li>
+<li>稳定不容易出错。</li>
+<li>自动持久化。</li>
+<li>可以持续集成打包。</li>
+</ol>
+
+<p>那么就只有一个路线syslinux使用<code>mkisofs</code>这个工具重新打包RancherOS最后我自己打包的结果30mb 比官方的还小1mb还可以对docker 进行自动持久化。方便在不同系统种分发Docker daemon</p>
+
+<h2>iPXE 启动的方法：</h2>
+
+<p>VirtualBox参考启动：</p>
+
+<pre><code>VBoxManage createvm --name &quot;service&quot; --register
+VBoxManage modifyvm &quot;service&quot; --memory 512 --acpi on --boot1 dvd
+VBoxManage modifyvm &quot;service&quot; --nic1 hostonly --hostonlyadapter1 vboxnet0 --nicpromisc1 allow-all
+VBoxManage modifyvm &quot;service&quot; --nic2 nat  --natnet2 &quot;192.168/16&quot; --natpf2 &quot;guestssh,tcp,,2222,,22&quot; --nicpromisc2 allow-all
+VBoxManage modifyvm &quot;service&quot; --ostype Linux
+
+VBoxManage createhd --filename /mnt/vdis/io.vdi --size 10000
+VBoxManage storagectl &quot;service&quot; --name &quot;IDE Controller&quot; --add ide
+VBoxManage storageattach &quot;service&quot; --storagectl &quot;IDE Controller&quot;  \
+    --port 0 --device 0 --type hdd --medium /mnt/vdis/io.vdi
+VBoxManage storageattach &quot;service&quot; --storagectl &quot;IDE Controller&quot; \
+    --port 1 --device 0 --type dvddrive --medium /mnt/git/ipxe/src/bin/ipxe.iso
+</code></pre>
+
+<p>因为总是需要重新启动调试所以这里把所有的VBOX操作都自动化。提升调试速度。</p>
+
+<h3>ipxe.iso 重新打包</h3>
+
+<p>因为要针对我们的using case使用，我们需要自动化boot一个固定的操作系统
+所以这里要针对我们的脚本重新打包。</p>
+
+<p>iso重新打包命令如下</p>
+
+<pre><code>git clone git://git.ipxe.org/ipxe.git
+cd ipxe/src
+make bin/ipxe.iso EMBED=bootscript
+</code></pre>
+
+<p>打包依赖：</p>
+
+<pre><code>gcc (version 3 or later)
+binutils (version 2.18 or later)
+make
+perl
+syslinux (for isolinux, only needed for building .iso images)
+liblzma or xz header files
+</code></pre>
+
+<p>bootscript 的内容：</p>
+
+<pre><code>#!ipxe
+
+dhcp
+chain http://192.168.56.1:8089/boot.html
+</code></pre>
+
+<p>注意： boot的时候请求的整个地址返回的内容为启动脚本。</p>
+
+<p>启动脚本内容：</p>
+
+<pre><code>#!ipxe
+# Boot a persistent RancherOS to RAM
+
+# Location of Kernel/Initrd images
+set base-url http://192.168.56.1:8089
+
+kernel ${base-url}/vmlinuz044 rancher.state.formatzero=true rancher.state.autoformat=[/dev/sda] rancher.cloud_init.datasources=['url:http://192.168.56.1:8089/rancheros.yml']
+initrd ${base-url}/initrd044
+boot
+</code></pre>
+
+<p>然后就可以启动RancherOS了。</p>
+
+<p>启动流程说明： <code>虚拟机启动-&gt;启动ipxe DVD-&gt;Chain load 请求 boot.html -&gt; iPXE 根据boot.html下载 vmlinuz initrd -&gt; 带入参数启动Linux（其实PE之类的也都好使）</code></p>
+
+<p>参考文档：</p>
+
+<ul>
+<li><a href="http://ipxe.org/download">代码下载以及编译参考</a></li>
+<li><a href="http://ipxe.org/embed">iso重新打包,嵌入脚本参考</a></li>
+<li><a href="http://ipxe.org/buildcfg">所有的BuildCFG参考</a></li>
+</ul>
+
+<h2>重新打包RancherOS 系统image</h2>
+
+<p>虽然官方提供了<a href="https://github.com/rancher/os/releases">Release下载</a>但是这里面的iso对于我的使用场景来说还远远不够。
+首先默认密码不能是固定的rancher，另外Docker 自动持久化的部分并没有做，另外就是Docker启动参数我不想用默认的我需要有一定的调整。这些原因通过iPXE.iso重新打包的方法学习之后促成了这一想法虽然简单，但是kernel参数的调整的确花费了我至少2-3小时的时间。为了避免自己再次踩坑来写一些说明。</p>
+
+<h3>VBOX 调试脚本</h3>
+
+<pre><code>VBoxManage createvm --name &quot;service&quot; --register
+VBoxManage modifyvm &quot;service&quot; --memory 512 --acpi on --boot1 dvd
+VBoxManage modifyvm &quot;service&quot; --nic1 hostonly --hostonlyadapter1 vboxnet0 --nicpromisc1 allow-all
+VBoxManage modifyvm &quot;service&quot; --nic2 nat  --natnet2 &quot;192.168/16&quot; --natpf2 &quot;guestssh,tcp,,2222,,22&quot; --nicpromisc2 allow-all
+VBoxManage modifyvm &quot;service&quot; --ostype Linux
+
+VBoxManage createhd --filename /mnt/vdis/io.vdi --size 10000
+VBoxManage storagectl &quot;service&quot; --name &quot;IDE Controller&quot; --add ide
+VBoxManage storageattach &quot;service&quot; --storagectl &quot;IDE Controller&quot;  \
+    --port 0 --device 0 --type hdd --medium /mnt/vdis/io.vdi
+VBoxManage storageattach &quot;service&quot; --storagectl &quot;IDE Controller&quot; \
+    --port 1 --device 0 --type dvddrive --medium /mnt/git/rancheros.iso
+</code></pre>
+
+<h3>打包命令(build.sh)：</h3>
+
+<pre><code>mkisofs -o ros.iso -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table rosiso/
+</code></pre>
+
+<h3>打包后结果</h3>
+
+<pre><code>├── build.sh
+├── rosiso
+│   ├── initrd
+│   ├── isolinux
+│   │   └── isolinux.bin
+│   ├── isolinux.cfg
+│   └── vmlinuz
+└── ros.iso
+</code></pre>
+
+<p>文件来源：</p>
+
+<ul>
+<li>initrd 以及vmlinuz 从rancheros release 页面获取</li>
+<li>isolinux.bin 如果是ubuntu文件的位置在： <code>/usr/lib/syslinux/isolinux.bin</code></li>
+<li>boot.cat 是自动生成的</li>
+<li>ros.iso 生成的系统镜像</li>
+</ul>
+
+<h3>isolinux.cfg 启动参数定制</h3>
+
+<pre><code>default rancheros
+label rancheros
+    kernel /vmlinuz
+    initrd /initrd
+    append quiet rancher.password=rancher rancher.state.autoformat=[/dev/sda] rancher.state.formatzero=true 
+</code></pre>
+
+<p>参数解释：（从quiet之后开始）</p>
+
+<ul>
+<li>rancher.password 设置默认账户密码。</li>
+<li>rancher.state.autoformat 自动格式化磁盘。</li>
+<li>Starts with 1 megabyte of zeros and <code>rancher.state.formatzero</code> is true.</li>
+<li>参数顺序会影响系统稳定性。</li>
+<li>所有参数查看需要等启动之后sudo ros c export -f &gt; cfg.yml 几乎所有参数都可以调整，另外单独一个参数里面不能有空格kernel的参数检查比cloud-init模块本身严格多了。</li>
+<li>上面这种方式为cmdline<a href="https://github.com/rancher/os/blob/master/cmd/cloudinit/cloudinit.go">操作系统源码</a> 在GetDatasources 函数这里。</li>
+</ul>
+
+<h3>参考文档:</h3>
+
+<ul>
+<li><a href="http://www.syslinux.org/wiki/index.php?title=ISOLINUX">ISOLINUX</a></li>
+<li><a href="https://github.com/rancher/os/blob/master/scripts/isolinux.cfg">对我就是从RancherOS官方启动参考</a></li>
+</ul>
+
+<h3>Windows 启动参考</h3>
+
+<pre><code>&quot;C:\Program Files\Oracle\VirtualBox\VBoxManage.exe&quot; createvm --name &quot;service&quot; --register
+&quot;C:\Program Files\Oracle\VirtualBox\VBoxManage.exe&quot; modifyvm &quot;service&quot; --memory 512 --acpi on --boot1 dvd
+&quot;C:\Program Files\Oracle\VirtualBox\VBoxManage.exe&quot; modifyvm &quot;service&quot; --nic1 hostonly --hostonlyadapter1 &quot;VirtualBox Host-Only Ethernet Adapter&quot; --nicpromisc1 allow-all
+&quot;C:\Program Files\Oracle\VirtualBox\VBoxManage.exe&quot; modifyvm &quot;service&quot; --nic2 nat  --natnet2 &quot;192.168/16&quot; --natpf2 &quot;guestssh,tcp,,2222,,22&quot; --nicpromisc2 allow-all
+&quot;C:\Program Files\Oracle\VirtualBox\VBoxManage.exe&quot; modifyvm &quot;service&quot; --ostype Linux
+
+&quot;C:\Program Files\Oracle\VirtualBox\VBoxManage.exe&quot; createhd --filename D:\io.vdi --size 10000
+&quot;C:\Program Files\Oracle\VirtualBox\VBoxManage.exe&quot; storagectl &quot;service&quot; --name &quot;IDE Controller&quot; --add ide
+&quot;C:\Program Files\Oracle\VirtualBox\VBoxManage.exe&quot; storageattach &quot;service&quot; --storagectl &quot;IDE Controller&quot;  --port 0 --device 0 --type hdd --medium D:\io.vdi
+&quot;C:\Program Files\Oracle\VirtualBox\VBoxManage.exe&quot; storageattach &quot;service&quot; --storagectl &quot;IDE Controller&quot; --port 1 --device 0 --type dvddrive --medium D:\ros.iso
+</code></pre>
+
+<p>注意： hostonly 网卡名字</p>
+
+<h3>vboxmanage 踩坑</h3>
+
+<h4>查看所有hostonly网卡：</h4>
+
+<p><code>VBoxManage list hostonlyifs</code></p>
+
+<h4>创建网卡并配置DHCP</h4>
+
+<pre><code>VBoxManage hostonlyif create
+VBoxManage hostonlyif ipconfig vboxnet0 --ip 192.168.56.1
+VBoxManage dhcpserver add --ifname vboxnet0 --ip 192.168.56.1 --netmask 255.255.255.0 --lowerip 192.168.56.254 --upperip 192.168.56.200
+VBoxManage dhcpserver modify --ifname vboxnet0 --enable
+</code></pre>
+
+<p>注意上面如果是windows注意换网卡名字</p>
+
+<h2>总结</h2>
+
+<ul>
+<li>新打包好的系统大小30MB</li>
+<li>启动时间10s左右（机械硬盘）</li>
+<li>强制关机，重新启动10次以上无错误。每次测试都有不同的小操作。</li>
+</ul>
+
+</div>
+
+<hr>
+本人博客文章采用<a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC Attribution-NonCommercial协议</a>: CC Attribution-NonCommercial 必须保留原作者署名,并且不允许用于商业用途,其他行为都是允许的。
+<hr>
+
+<script src="https://utteranc.es/client.js"
+        repo="lijianying10/RollingBlog"
+        issue-term="RancherOS iPXE 启动以及ISO重新打包的方法"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/06/11/RancherOSBootMethod/" data-title="RancherOS iPXE 启动以及ISO重新打包的方法" data-url="http://www.philo.top/2016/06/11/RancherOSBootMethod/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"philotop"};
+(function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+})();
+</script>
+<!-- 多说公共JS代码 end -->
+
+<hr>
+
+                </div>
+
+                <!-- Blog Sidebar Widgets Column -->
+                <div class="col-lg-3 col-12">
+
+                    <!-- Blog Search Well -->
+                    <!--                 <div class="well">
+                        <h4>Blog Search</h4>
+                        <div class="input-group">
+                        <input type="text" class="form-control">
+                        <span class="input-group-btn">
+                        <button class="btn btn-default" type="button">
+                        <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        </span>
+                        </div> -->
+                        <!-- /.input-group -->
+                        <!-- </div> -->
+
+                        <!-- Blog Categories Well -->
+                        <div class="well">
+                            <h4>TAGS</h4>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/wiki">wiki(2)</a></br><a href="/tags/thinking">thinking(3)</a></br><a href="/tags/node">node(1)</a></br><a href="/tags/iptables">iptables(1)</a></br><a href="/tags/devenv">devenv(1)</a></br><a href="/tags/elk">elk(1)</a></br><a href="/tags/oop">oop(1)</a></br><a href="/tags/html">html(1)</a></br><a href="/tags/mesos">mesos(1)</a></br><a href="/tags/tmux">tmux(1)</a></br><a href="/tags/git">git(8)</a></br><a href="/tags/nodejs">nodejs(1)</a></br><a href="/tags/DaoCloud">DaoCloud(1)</a></br><a href="/tags/java">java(2)</a></br><a href="/tags/visualization">visualization(1)</a></br><a href="/tags/elasticsearch">elasticsearch(1)</a></br><a href="/tags/requirejs">requirejs(1)</a></br><a href="/tags/network">network(2)</a></br><a href="/tags/dns">dns(1)</a></br><a href="/tags/ss">ss(1)</a></br><a href="/tags/css">css(1)</a></br><a href="/tags/docker">docker(22)</a></br><a href="/tags/centos">centos(1)</a></br><a href="/tags/mysql">mysql(3)</a></br><a href="/tags/grub">grub(1)</a></br><a href="/tags/butterfly">butterfly(1)</a></br><a href="/tags/web">web(3)</a></br><a href="/tags/php">php(1)</a></br><a href="/tags/mongodab">mongodab(1)</a></br><a href="/tags/putty">putty(2)</a></br><a href="/tags/RHEL">RHEL(1)</a></br><a href="/tags/PXE">PXE(1)</a></br><a href="/tags/ci">ci(1)</a></br><a href="/tags/iPXE">iPXE(1)</a></br><a href="/tags/gh60">gh60(1)</a></br><a href="/tags/env">env(2)</a></br><a href="/tags/DES">DES(1)</a></br><a href="/tags/microservice">microservice(2)</a></br><a href="/tags/Ubuntu">Ubuntu(1)</a></br><a href="/tags/logstash">logstash(1)</a></br><a href="/tags/c">c(1)</a></br><a href="/tags/marathon">marathon(1)</a></br><a href="/tags/owncloud">owncloud(1)</a></br><a href="/tags/npm">npm(1)</a></br><a href="/tags/virtualbox">virtualbox(3)</a></br><a href="/tags/python">python(4)</a></br><a href="/tags/delegate">delegate(1)</a></br><a href="/tags/mac">mac(2)</a></br><a href="/tags/tray">tray(1)</a></br><a href="/tags/require.js">require.js(1)</a></br><a href="/tags/etcd">etcd(3)</a></br><a href="/tags/postgresql">postgresql(1)</a></br><a href="/tags/systemd-resolved">systemd-resolved(1)</a></br><a href="/tags/js">js(8)</a></br><a href="/tags/phpExtension">phpExtension(1)</a></br><a href="/tags/rancher">rancher(2)</a></br><a href="/tags/html5">html5(1)</a></br><a href="/tags/test">test(1)</a></br>
+                                    </ul>
+                                </div>
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/homebrew">homebrew(1)</a></br><a href="/tags/linux">linux(5)</a></br><a href="/tags/macos">macos(1)</a></br><a href="/tags/Cow">Cow(1)</a></br><a href="/tags/yaml">yaml(1)</a></br><a href="/tags/golang">golang(23)</a></br><a href="/tags/ucloud">ucloud(1)</a></br><a href="/tags/redsocks">redsocks(1)</a></br><a href="/tags/article">article(1)</a></br><a href="/tags/Docker">Docker(2)</a></br><a href="/tags/minecraft">minecraft(2)</a></br><a href="/tags/vim">vim(3)</a></br><a href="/tags/storage">storage(1)</a></br><a href="/tags/atom">atom(2)</a></br><a href="/tags/MongoDB">MongoDB(1)</a></br><a href="/tags/runc">runc(1)</a></br><a href="/tags/bootstrap">bootstrap(1)</a></br><a href="/tags/HomeBrew">HomeBrew(1)</a></br><a href="/tags/iterm2">iterm2(1)</a></br><a href="/tags/flannel">flannel(1)</a></br><a href="/tags/RunC">RunC(1)</a></br><a href="/tags/bazel">bazel(2)</a></br><a href="/tags/dev">dev(2)</a></br><a href="/tags/profiling">profiling(2)</a></br><a href="/tags/kibina">kibina(1)</a></br><a href="/tags/android">android(1)</a></br><a href="/tags/hexo">hexo(3)</a></br><a href="/tags/nginx">nginx(6)</a></br><a href="/tags/ubuntu">ubuntu(5)</a></br><a href="/tags/career">career(1)</a></br><a href="/tags/syslinux">syslinux(1)</a></br><a href="/tags/aglio">aglio(1)</a></br><a href="/tags/blog">blog(1)</a></br><a href="/tags/liteIDE">liteIDE(1)</a></br><a href="/tags/metaprogramming">metaprogramming(1)</a></br><a href="/tags/BusyBox">BusyBox(1)</a></br><a href="/tags/杂谈">杂谈(1)</a></br><a href="/tags/thrift">thrift(1)</a></br><a href="/tags/rkt">rkt(1)</a></br><a href="/tags/ssl">ssl(2)</a></br><a href="/tags/letsencrypt">letsencrypt(1)</a></br><a href="/tags/consul">consul(1)</a></br><a href="/tags/mongodb">mongodb(3)</a></br><a href="/tags/busybox">busybox(1)</a></br><a href="/tags/coreos">coreos(1)</a></br><a href="/tags/GC">GC(1)</a></br><a href="/tags/Linux">Linux(13)</a></br><a href="/tags/ShadowSocks">ShadowSocks(1)</a></br><a href="/tags/registry">registry(3)</a></br><a href="/tags/CoreOS">CoreOS(1)</a></br><a href="/tags/netplan">netplan(1)</a></br><a href="/tags/godoc">godoc(1)</a></br><a href="/tags/osx">osx(4)</a></br><a href="/tags/datatables">datatables(1)</a></br><a href="/tags/StackStorm2">StackStorm2(1)</a></br><a href="/tags/tenxcloud">tenxcloud(1)</a></br><a href="/tags/shell">shell(6)</a></br>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+
+                        <!-- Side Widget Well -->
+                        <div class="well">
+                            <h4>近期文章</h4>
+                            <a href="/2021/03/14/metaprogramming/">Metaprogramming and code generation/replace in action</a></br><a href="/2021/02/15/dockerprivateregistryen/">deploy docker registry under private network</a></br><a href="/2021/02/14/golangvimdev/">my vim golang programming environment</a></br><a href="/2021/02/06/bazelmacro/">bazel macro 的开发</a></br><a href="/2021/01/15/bazelboost/">bazel 使用经验和记录</a></br><a href="/2021/01/14/dockerprivateregistry/">小型团队内网创建docker registry</a></br><a href="/2021/01/14/ubuntudnssystemdresolved/">网关服务器部署DNS的冲突问题解决</a></br><a href="/2021/01/13/iptablesredsocksdocker/">iptables 使用 Redsocks 时候 Docker 没有网络问题的分析</a></br>
+                        </div>
+                        <div class="well">
+                            <h4>友情链接</h4>
+                            <a href="https://linux.cn/">Linux中国</a></br>
+                            <a href="http://locez.com/">LOCEZ</a></br>
+                            <a href="http://blog.ibeats.top/">CI_Knight</a>
+                        </div>
+
+                </div>
+
+            </div>
+            <!-- /.row -->
+
+            <hr>
+
+            <!-- Footer -->
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Copyright &copy; philo.top PowerBy <a href="https://github.com/lijianying10/RollingBlog">RollingBlog</a> 2020 Since 2015</p>
+                        <!-- Global site tag (gtag.js) - Google Analytics -->
+                        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173403528-1"></script>
+                        <script>
+                          window.dataLayer = window.dataLayer || [];
+                          function gtag(){dataLayer.push(arguments);}
+                          gtag('js', new Date());
+                        
+                          gtag('config', 'UA-173403528-1');
+                        </script>
+
+                    </div>
+                </div>
+                <!-- /.row -->
+            </footer>
+
+        </div>
+        <!-- /.container -->
+
+        <!-- jQuery -->
+        <script src="/js/jquery.js"></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/prism.js"></script>
+
+    </body>
+
+</html>
+

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>golang调优之GC</title>
+        <link href="/css/prism.css" rel="stylesheet">
+        <link href="/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/css/blog-post.css" rel="stylesheet">
+        <link href="/css/typo.css" rel="stylesheet">
+        <link rel="shortcut icon" href="/favicon.ico" />
+    </head>
+
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Philo</a>
+                </div>
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/">HOME</a>
+                        </li>
+                        <li>
+                            <a href="/archive/">Archive</a>
+                        </li>
+                        <li>
+                            <a href="/2015/02/21/index/index.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container -->
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container" style="
+                margin-top: 70px;
+                ">
+
+            <div class="row">
+
+                <!-- Blog Post Content Column -->
+                <div class="col-lg-9 col-12">
+
+                    <!-- Blog Post -->
+
+<!-- Title -->
+<h1><a href="/2015/05/29/golangProfilingAndGC2/">golang调优之GC</a></h1>
+ 
+<!-- Author -->
+<p class="lead">
+Tags
+
+<a href="/tags/profiling">profiling</a>
+
+<a href="/tags/golang">golang</a>
+
+<a href="/tags/GC">GC</a>
+
+</p>
+
+<hr>
+
+<!-- Date/Time -->
+<p><span class="glyphicon glyphicon-time"></span> 2015-05-29 12:35:27</p>
+
+<hr>
+
+<div class="typo">
+<h2>Continue</h2>
+
+<p>在<a href="/2015/05/29/golangProfilingAndGC/">上篇</a>中，主要针对个函数使用时间来对程序分析进行调优。
+在本片中由于发现GC使用时间过长来对程序进行分析。
+针对内存进行调优。</p>
+
+<h2>内存调优，查找什么位置引发GC时间过多</h2>
+
+<p>第二个版本的pprof结果</p>
+
+<pre><code>(pprof) top5
+Total: 1652 samples
+     197  11.9%  11.9%      382  23.1% scanblock
+     189  11.4%  23.4%     1549  93.8% main.FindLoops
+     130   7.9%  31.2%      152   9.2% sweepspan
+     104   6.3%  37.5%      896  54.2% runtime.mallocgc
+      98   5.9%  43.5%      100   6.1% flushptrbuf
+</code></pre>
+
+<p>可以看到GC的时间（runtime.mallocgc）占用到了（54.2%）。</p>
+
+<p>内存profile输出方法</p>
+
+<pre><code>var memprofile = flag.String(&quot;memprofile&quot;, &quot;&quot;, &quot;write memory profile to this file&quot;)
+...
+
+    FindHavlakLoops(cfgraph, lsgraph)
+    if *memprofile != &quot;&quot; {
+        f, err := os.Create(*memprofile)
+        if err != nil {
+            log.Fatal(err)
+        }
+        pprof.WriteHeapProfile(f)
+        f.Close()
+        return
+    }
+</code></pre>
+
+<p>调用方法</p>
+
+<pre><code>$ make havlak3.mprof
+go build havlak3.go
+./havlak3 -memprofile=havlak3.mprof
+</code></pre>
+
+<p>结果</p>
+
+<pre><code>$ go tool pprof havlak3 havlak3.mprof
+Adjusting heap profiles for 1-in-524288 sampling rate
+Welcome to pprof!  For help, type 'help'.
+(pprof) top5
+Total: 82.4 MB
+    56.3  68.4%  68.4%     56.3  68.4% main.FindLoops
+    17.6  21.3%  89.7%     17.6  21.3% main.(*CFG).CreateNode
+     8.0   9.7%  99.4%     25.6  31.0% main.NewBasicBlockEdge
+     0.5   0.6% 100.0%      0.5   0.6% itab
+     0.0   0.0% 100.0%      0.5   0.6% fmt.init
+</code></pre>
+
+<p>分析过程：
+首先说明一下 <code>1-in-524288</code> 的意思是内存每变化越0.5MB取样一次。
+因为GC的垃圾回收，那么针对内存热点进行分析，看看为啥FindLoops 分配了那么多内存是关键！</p>
+
+<pre><code>(pprof) list FindLoops
+Total: 82.4 MB
+ROUTINE ====================== main.FindLoops in /home/rsc/g/benchgraffiti/havlak/havlak3.go
+  56.3   56.3 Total MB (flat / cumulative)
+...
+   1.9    1.9  268:     nonBackPreds := make([]map[int]bool, size)
+   5.8    5.8  269:     backPreds := make([][]int, size)
+     .      .  270:
+   1.9    1.9  271:     number := make([]int, size)
+   1.9    1.9  272:     header := make([]int, size, size)
+   1.9    1.9  273:     types := make([]int, size, size)
+   1.9    1.9  274:     last := make([]int, size, size)
+   1.9    1.9  275:     nodes := make([]*UnionFindNode, size, size)
+     .      .  276:
+     .      .  277:     for i := 0; i &lt; size; i++ {
+   9.5    9.5  278:             nodes[i] = new(UnionFindNode)
+     .      .  279:     }
+...
+     .      .  286:     for i, bb := range cfgraph.Blocks {
+     .      .  287:             number[bb.Name] = unvisited
+  29.5   29.5  288:             nonBackPreds[i] = make(map[int]bool)
+     .      .  289:     }
+...
+</code></pre>
+
+<p>在29.5mb的位置可以看到与上一篇内容中出现了一样的错误。能用简单数据结构搞定的问题用了map</p>
+
+<p>因为要看GC所以需要查看程序到底在这个位置上分配了多少次内存</p>
+
+<pre><code>$ go tool pprof --inuse_objects havlak3 havlak3.mprof
+Adjusting heap profiles for 1-in-524288 sampling rate
+Welcome to pprof!  For help, type 'help'.
+(pprof) list FindLoops
+Total: 1763108 objects
+ROUTINE ====================== main.FindLoops in /home/rsc/g/benchgraffiti/havlak/havlak3.go
+720903 720903 Total objects (flat / cumulative)
+...
+     .      .  277:     for i := 0; i &lt; size; i++ {
+311296 311296  278:             nodes[i] = new(UnionFindNode)
+     .      .  279:     }
+     .      .  280:
+     .      .  281:     // Step a:
+     .      .  282:     //   - initialize all nodes as unvisited.
+     .      .  283:     //   - depth-first traversal and numbering.
+     .      .  284:     //   - unreached BB's are marked as dead.
+     .      .  285:     //
+     .      .  286:     for i, bb := range cfgraph.Blocks {
+     .      .  287:             number[bb.Name] = unvisited
+409600 409600  288:             nonBackPreds[i] = make(map[int]bool)
+     .      .  289:     }
+...
+(pprof)
+</code></pre>
+
+<p>解决问题
+<a href="https://code.google.com/p/benchgraffiti/source/diff?name=796913012f93&amp;r=d856c2f698c1&amp;format=unidiff&amp;path=/havlak/havlak.go">https://code.google.com/p/benchgraffiti/source/diff?name=796913012f93&amp;r=d856c2f698c1&amp;format=unidiff&amp;path=/havlak/havlak.go</a></p>
+
+<p>尊重原作者，直接贴diff连接。
+scan一次代码之后可以很直接的看到map通过算法调整全都不用了。
+这也是前文中提到的能用简单的数据结构解决的问题使用了map来解决。</p>
+
+<h1>但是本次调优更精华的内容在于</h1>
+
+<ol>
+<li>直观的看到make的次数减少了。</li>
+<li>以变量nonBackPreds为例：
+
+<ol>
+<li>在原来的执行过程当中通过不断的新建临时map来达到集合的效果（不重复）</li>
+<li>后来调优者使用了append的方式不断加在内存中。</li>
+</ol></li>
+<li>算法中数据存储大部分都集中在了这个变量中（这是避免GC）</li>
+<li>append slices 中有两个属性一个是len一个是cap使用append从内存角度来看，是操作很长时间才由于cap不够再次申请一次内存，而原来是达到一定周期数
+之后马上alloc内存从频率上就有很多不同，说白了在用slices避免GC</li>
+<li>不过我没验证过，在make slices的过程中如果给出cap parameter虽然内存使用可能会变多。但是alloc的次数会变少，会不会有性能优化？</li>
+<li>看来算法执行上，越是避免内存操作性能就会越好。</li>
+</ol>
+
+<p>本次调优结果显示性能已经超过C++：</p>
+
+<pre><code>$time ./havlak4
+# of loops: 76000 (including 1 artificial root node)
+
+real	0m8.965s
+user	0m8.875s
+sys	0m0.083s
+</code></pre>
+
+<p>接下来发现GC的时间还是很长</p>
+
+<pre><code>(pprof) list FindLoops
+...
+     .      .  270: func FindLoops(cfgraph *CFG, lsgraph *LSG) {
+     .      .  271:     if cfgraph.Start == nil {
+     .      .  272:             return
+     .      .  273:     }
+     .      .  274:
+     .      .  275:     size := cfgraph.NumNodes()
+     .      .  276:
+     .    145  277:     nonBackPreds := make([][]int, size)
+     .      9  278:     backPreds := make([][]int, size)
+     .      .  279:
+     .      1  280:     number := make([]int, size)
+     .     17  281:     header := make([]int, size, size)
+     .      .  282:     types := make([]int, size, size)
+     .      .  283:     last := make([]int, size, size)
+     .      .  284:     nodes := make([]*UnionFindNode, size, size)
+     .      .  285:
+     .      .  286:     for i := 0; i &lt; size; i++ {
+     2     79  287:             nodes[i] = new(UnionFindNode)
+     .      .  288:     }
+...
+(pprof)
+</code></pre>
+
+<p>在L277位置上发现不断的make导致GC
+因此下一步精简内存alloc（只有精简alloc才能减少GC，道理很直接）
+做成Global Cache之后测试结果为：</p>
+
+<pre><code>$time ./havlak5
+# of loops: 76000 (including 1 artificial root node)
+
+real	0m5.742s
+user	0m5.664s
+sys	0m0.063s
+</code></pre>
+
+<p>之后经过解开多层循环，等等一些列的优化。（profile已经看不出来）
+成绩：</p>
+
+<pre><code>$time ./havlak6
+# of loops: 76000 (including 1 artificial root node)
+
+real	0m2.307s
+user	0m2.276s
+sys	0m0.031s
+</code></pre>
+
+<p>同等情况下C++的结果(原作中C++结果为1.99s)：</p>
+
+<pre><code>$time ./a.out
+# of loops: 76000 (including 1 artificial root node)
+
+real	0m4.741s
+user	0m4.650s
+sys	0m0.081s
+
+O3 优化结果
+$time ./a.out
+# of loops: 76000 (including 1 artificial root node)
+
+real	0m2.279s
+user	0m2.178s
+sys	0m0.095s
+
+</code></pre>
+
+<h1>总结</h1>
+
+<p>首先golang其实性能是可以接近C++的。
+当然我们最大的收获是避免GC的具体方法。以及一次珍贵的。
+近距离观察大神的算法调优过程。再一次学习了如何减少内存alloc的次数方法。</p>
+
+</div>
+
+<hr>
+本人博客文章采用<a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC Attribution-NonCommercial协议</a>: CC Attribution-NonCommercial 必须保留原作者署名,并且不允许用于商业用途,其他行为都是允许的。
+<hr>
+
+<script src="https://utteranc.es/client.js"
+        repo="lijianying10/RollingBlog"
+        issue-term="golang调优之GC"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2015/05/29/golangProfilingAndGC2/" data-title="golang调优之GC" data-url="http://www.philo.top/2015/05/29/golangProfilingAndGC2/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"philotop"};
+(function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+})();
+</script>
+<!-- 多说公共JS代码 end -->
+
+<hr>
+
+                </div>
+
+                <!-- Blog Sidebar Widgets Column -->
+                <div class="col-lg-3 col-12">
+
+                    <!-- Blog Search Well -->
+                    <!--                 <div class="well">
+                        <h4>Blog Search</h4>
+                        <div class="input-group">
+                        <input type="text" class="form-control">
+                        <span class="input-group-btn">
+                        <button class="btn btn-default" type="button">
+                        <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        </span>
+                        </div> -->
+                        <!-- /.input-group -->
+                        <!-- </div> -->
+
+                        <!-- Blog Categories Well -->
+                        <div class="well">
+                            <h4>TAGS</h4>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/wiki">wiki(2)</a></br><a href="/tags/thinking">thinking(3)</a></br><a href="/tags/node">node(1)</a></br><a href="/tags/iptables">iptables(1)</a></br><a href="/tags/devenv">devenv(1)</a></br><a href="/tags/elk">elk(1)</a></br><a href="/tags/oop">oop(1)</a></br><a href="/tags/html">html(1)</a></br><a href="/tags/mesos">mesos(1)</a></br><a href="/tags/tmux">tmux(1)</a></br><a href="/tags/git">git(8)</a></br><a href="/tags/nodejs">nodejs(1)</a></br><a href="/tags/DaoCloud">DaoCloud(1)</a></br><a href="/tags/java">java(2)</a></br><a href="/tags/visualization">visualization(1)</a></br><a href="/tags/elasticsearch">elasticsearch(1)</a></br><a href="/tags/requirejs">requirejs(1)</a></br><a href="/tags/network">network(2)</a></br><a href="/tags/dns">dns(1)</a></br><a href="/tags/ss">ss(1)</a></br><a href="/tags/css">css(1)</a></br><a href="/tags/docker">docker(22)</a></br><a href="/tags/centos">centos(1)</a></br><a href="/tags/mysql">mysql(3)</a></br><a href="/tags/grub">grub(1)</a></br><a href="/tags/butterfly">butterfly(1)</a></br><a href="/tags/web">web(3)</a></br><a href="/tags/php">php(1)</a></br><a href="/tags/mongodab">mongodab(1)</a></br><a href="/tags/putty">putty(2)</a></br><a href="/tags/RHEL">RHEL(1)</a></br><a href="/tags/PXE">PXE(1)</a></br><a href="/tags/ci">ci(1)</a></br><a href="/tags/iPXE">iPXE(1)</a></br><a href="/tags/gh60">gh60(1)</a></br><a href="/tags/env">env(2)</a></br><a href="/tags/DES">DES(1)</a></br><a href="/tags/microservice">microservice(2)</a></br><a href="/tags/Ubuntu">Ubuntu(1)</a></br><a href="/tags/logstash">logstash(1)</a></br><a href="/tags/c">c(1)</a></br><a href="/tags/marathon">marathon(1)</a></br><a href="/tags/owncloud">owncloud(1)</a></br><a href="/tags/npm">npm(1)</a></br><a href="/tags/virtualbox">virtualbox(3)</a></br><a href="/tags/python">python(4)</a></br><a href="/tags/delegate">delegate(1)</a></br><a href="/tags/mac">mac(2)</a></br><a href="/tags/tray">tray(1)</a></br><a href="/tags/require.js">require.js(1)</a></br><a href="/tags/etcd">etcd(3)</a></br><a href="/tags/postgresql">postgresql(1)</a></br><a href="/tags/systemd-resolved">systemd-resolved(1)</a></br><a href="/tags/js">js(8)</a></br><a href="/tags/phpExtension">phpExtension(1)</a></br><a href="/tags/rancher">rancher(2)</a></br><a href="/tags/html5">html5(1)</a></br><a href="/tags/test">test(1)</a></br>
+                                    </ul>
+                                </div>
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/homebrew">homebrew(1)</a></br><a href="/tags/linux">linux(5)</a></br><a href="/tags/macos">macos(1)</a></br><a href="/tags/Cow">Cow(1)</a></br><a href="/tags/yaml">yaml(1)</a></br><a href="/tags/golang">golang(23)</a></br><a href="/tags/ucloud">ucloud(1)</a></br><a href="/tags/redsocks">redsocks(1)</a></br><a href="/tags/article">article(1)</a></br><a href="/tags/Docker">Docker(2)</a></br><a href="/tags/minecraft">minecraft(2)</a></br><a href="/tags/vim">vim(3)</a></br><a href="/tags/storage">storage(1)</a></br><a href="/tags/atom">atom(2)</a></br><a href="/tags/MongoDB">MongoDB(1)</a></br><a href="/tags/runc">runc(1)</a></br><a href="/tags/bootstrap">bootstrap(1)</a></br><a href="/tags/HomeBrew">HomeBrew(1)</a></br><a href="/tags/iterm2">iterm2(1)</a></br><a href="/tags/flannel">flannel(1)</a></br><a href="/tags/RunC">RunC(1)</a></br><a href="/tags/bazel">bazel(2)</a></br><a href="/tags/dev">dev(2)</a></br><a href="/tags/profiling">profiling(2)</a></br><a href="/tags/kibina">kibina(1)</a></br><a href="/tags/android">android(1)</a></br><a href="/tags/hexo">hexo(3)</a></br><a href="/tags/nginx">nginx(6)</a></br><a href="/tags/ubuntu">ubuntu(5)</a></br><a href="/tags/career">career(1)</a></br><a href="/tags/syslinux">syslinux(1)</a></br><a href="/tags/aglio">aglio(1)</a></br><a href="/tags/blog">blog(1)</a></br><a href="/tags/liteIDE">liteIDE(1)</a></br><a href="/tags/metaprogramming">metaprogramming(1)</a></br><a href="/tags/BusyBox">BusyBox(1)</a></br><a href="/tags/杂谈">杂谈(1)</a></br><a href="/tags/thrift">thrift(1)</a></br><a href="/tags/rkt">rkt(1)</a></br><a href="/tags/ssl">ssl(2)</a></br><a href="/tags/letsencrypt">letsencrypt(1)</a></br><a href="/tags/consul">consul(1)</a></br><a href="/tags/mongodb">mongodb(3)</a></br><a href="/tags/busybox">busybox(1)</a></br><a href="/tags/coreos">coreos(1)</a></br><a href="/tags/GC">GC(1)</a></br><a href="/tags/Linux">Linux(13)</a></br><a href="/tags/ShadowSocks">ShadowSocks(1)</a></br><a href="/tags/registry">registry(3)</a></br><a href="/tags/CoreOS">CoreOS(1)</a></br><a href="/tags/netplan">netplan(1)</a></br><a href="/tags/godoc">godoc(1)</a></br><a href="/tags/osx">osx(4)</a></br><a href="/tags/datatables">datatables(1)</a></br><a href="/tags/StackStorm2">StackStorm2(1)</a></br><a href="/tags/tenxcloud">tenxcloud(1)</a></br><a href="/tags/shell">shell(6)</a></br>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+
+                        <!-- Side Widget Well -->
+                        <div class="well">
+                            <h4>近期文章</h4>
+                            <a href="/2021/03/14/metaprogramming/">Metaprogramming and code generation/replace in action</a></br><a href="/2021/02/15/dockerprivateregistryen/">deploy docker registry under private network</a></br><a href="/2021/02/14/golangvimdev/">my vim golang programming environment</a></br><a href="/2021/02/06/bazelmacro/">bazel macro 的开发</a></br><a href="/2021/01/15/bazelboost/">bazel 使用经验和记录</a></br><a href="/2021/01/14/dockerprivateregistry/">小型团队内网创建docker registry</a></br><a href="/2021/01/14/ubuntudnssystemdresolved/">网关服务器部署DNS的冲突问题解决</a></br><a href="/2021/01/13/iptablesredsocksdocker/">iptables 使用 Redsocks 时候 Docker 没有网络问题的分析</a></br>
+                        </div>
+                        <div class="well">
+                            <h4>友情链接</h4>
+                            <a href="https://linux.cn/">Linux中国</a></br>
+                            <a href="http://locez.com/">LOCEZ</a></br>
+                            <a href="http://blog.ibeats.top/">CI_Knight</a>
+                        </div>
+
+                </div>
+
+            </div>
+            <!-- /.row -->
+
+            <hr>
+
+            <!-- Footer -->
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Copyright &copy; philo.top PowerBy <a href="https://github.com/lijianying10/RollingBlog">RollingBlog</a> 2020 Since 2015</p>
+                        <!-- Global site tag (gtag.js) - Google Analytics -->
+                        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173403528-1"></script>
+                        <script>
+                          window.dataLayer = window.dataLayer || [];
+                          function gtag(){dataLayer.push(arguments);}
+                          gtag('js', new Date());
+                        
+                          gtag('config', 'UA-173403528-1');
+                        </script>
+
+                    </div>
+                </div>
+                <!-- /.row -->
+            </footer>
+
+        </div>
+        <!-- /.container -->
+
+        <!-- jQuery -->
+        <script src="/js/jquery.js"></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/prism.js"></script>
+
+    </body>
+
+</html>
+

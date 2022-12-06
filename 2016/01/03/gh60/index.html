@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>gh60折腾记录</title>
+        <link href="/css/prism.css" rel="stylesheet">
+        <link href="/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/css/blog-post.css" rel="stylesheet">
+        <link href="/css/typo.css" rel="stylesheet">
+        <link rel="shortcut icon" href="/favicon.ico" />
+    </head>
+
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Philo</a>
+                </div>
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/">HOME</a>
+                        </li>
+                        <li>
+                            <a href="/archive/">Archive</a>
+                        </li>
+                        <li>
+                            <a href="/2015/02/21/index/index.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container -->
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container" style="
+                margin-top: 70px;
+                ">
+
+            <div class="row">
+
+                <!-- Blog Post Content Column -->
+                <div class="col-lg-9 col-12">
+
+                    <!-- Blog Post -->
+
+<!-- Title -->
+<h1><a href="/2016/01/03/gh60/">gh60折腾记录</a></h1>
+ 
+<!-- Author -->
+<p class="lead">
+Tags
+
+<a href="/tags/c">c</a>
+
+<a href="/tags/gh60">gh60</a>
+
+</p>
+
+<hr>
+
+<!-- Date/Time -->
+<p><span class="glyphicon glyphicon-time"></span> 2016-01-03 21:42:25</p>
+
+<hr>
+
+<div class="typo">
+<h2>version : 1.1</h2>
+
+<p><img src="http://7viiaq.com1.z0.glb.clouddn.com/gh60IMG_0428.jpg" alt="" /></p>
+
+<h1>意义</h1>
+
+<ol>
+<li>整个组装过程非常有乐趣</li>
+<li>好用不贵</li>
+<li>满足自己各种各样奇怪的要求，可玩度非常高。</li>
+</ol>
+
+<h1>版本更新记录VER:1.1</h1>
+
+<p>主要是找到了所有的keymap文档，然后大概扫了一眼源代码，它是自动前面给你加上<code>KC_</code>的所以源代码不太好找。</p>
+
+<p>调整一下文字渲染，使文档更加容易阅读。</p>
+
+<p>我通过找到keymap文档找到了音乐控制的快捷键。非常方便，只是不兼容网易云音乐，还未解决。你可以在<a href="https://github.com/lijianying10/FixLinux/blob/master/gh60.c">这里</a>找到我的最新keymap。</p>
+
+<h2>硬件组装过程</h2>
+
+<p>可以直接参考淘宝店里面的<a href="http://www.pcwaishe.cn/thread-632487-1-1.html">教程</a></p>
+
+<p>我的组装焊锡的过程不表示，淘宝店直接买的是白杨外设店的套餐，选来选去，一次性完成最方便了。</p>
+
+<p>总结一下我遇到的坑，以及犯的错误：</p>
+
+<ol>
+<li>钢板先要套上pcb然后然后一个一个插入键轴，不是先插入到钢板然后再对准主板的，尤其是有热插拔的时候，几乎不可能完成两块板对接。</li>
+<li>一定要先看淘宝店主给的教程啊，不然洞插错了，很蛋疼。我就是典型的悲剧。</li>
+<li>卫星轴的调整很重要，首先钢丝跟轴体的摩擦力，太大的情况下，键盘的反馈是非常差的，按下去也非常吃力。其次当你发现有这个问题的时候，想再调整就很困难了。</li>
+<li>完美注意深入此键盘，首先淘宝店主给你做的时候就有可能有各种瑕疵，然而这种瑕疵（误差）是不可避免的，其次自己做手都不熟，很有可能蛋疼。</li>
+</ol>
+
+<h2>固件定制</h2>
+
+<p>这个路程走的还是比较艰辛的，因为教程非常少，而且找到的也非常针对个人的来写的。我使用的是C语言代码来定制layout
+并没有使用网上各种工具，使用我这种方法刷进去比较省心，并且也不用研究那么多东西。我使用的电脑是osx，我写的
+方法适用于linux 和osx。至于其他操作系统通过查看doc配置cygwin就一样了。</p>
+
+<h3>固件环境安装：</h3>
+
+<ol>
+<li><a href="http://brew.sh/">homebrew</a>不多做解释。</li>
+<li><a href="https://sites.google.com/site/avrxinu/project-definition/getting-started/toolchain-build">crosspack</a>编译器安装，参考osx这里就行了</li>
+<li>最后 <code>brew install dfu-programmer</code></li>
+</ol>
+
+<p>整个过程还是比较简单的
+但是有部分大下载不下来，或者gist被墙，可以自己先找个地方下载下来之后。
+使用 <code>brew edit</code>修改下载脚本来帮助brew完成整个下载流程。</p>
+
+<h3>固件代码下载</h3>
+
+<pre><code class="language-shell">git clone https://github.com/kairyu/tmk_keyboard_custom.git
+</code></pre>
+
+<p>代码下载之后我发现了一个问题submode并没有被克隆然后使用递归也没有克隆成功，反正依赖模块不多先手动搞定。
+操作如下：</p>
+
+<pre><code class="language-shell">cd tmk_keyboard_custom
+git clone https://github.com/kairyu/tmk_core_custom.git
+rm -rf tmk_core
+ln -s tmk_core_custom tmk_core
+</code></pre>
+
+<p><code>对上面的操作进行解释：</code> 主要是在编译的时候遇到了不少坑，找不到头文件之类的，后来我主动查看了github上的源码目录才发现里面有一个子模块引用的还是一个比较老的版本的源码，在这里经过我的测试使用最新版的是没有问题的。</p>
+
+<p>到这里固件源代码都已经准备好。</p>
+
+<h3>源码调整</h3>
+
+<p>主要是两个地方需要调整</p>
+
+<ol>
+<li>指定gh60主板的型号</li>
+<li>在Makefile里面去掉编译条件： <code>KEYMAP_IN_EEPROM_ENABLE = yes</code></li>
+</ol>
+
+<p>第一条调整,只需要在config.h中 <code>#define CONFIG_H</code>的下面加上代码 <code>#define GH60_REV_CHN 1</code>
+即可完成，<code>注意</code> : 貌似有些教程比较坑，define语法明显不对，后面少了个<code>1</code></p>
+
+<p>第二条调整，在目标代码前面加 <code>#</code>就可以了。</p>
+
+<h3>keymap调整</h3>
+
+<p>首先说明一下为啥不想用网页上的工具来生成C文件：</p>
+
+<ol>
+<li>网页上的流程太繁琐，然后失去了很多可玩度。参考这位大神给出的keymap <a href="https://gist.github.com/bigeagle/16a6c48dde34076f7649">https://gist.github.com/bigeagle/16a6c48dde34076f7649</a>注意看他的函数，看他是怎么调整vim键位的。</li>
+<li>我刚开始不了解的时候也试过了网上的方法压根编译就过不去。然后我就放弃了这也是一大原因。</li>
+<li>主要还是为了以后的乐趣。</li>
+</ol>
+
+<p>然后说明一些我已经遇到的坑。</p>
+
+<ol>
+<li>在左上角的位置如果想调整成键位<code>GRV</code> 那么你需要吧所有的layer的左上角的键位都改成<code>GRV</code>，原因不明，如果不照做结果就是ESC</li>
+<li>键盘最多能有8层，存储空间有限，且玩且珍惜。</li>
+<li>经过我这么多坑走过来，建议跟我一样的程序员们上来先试试poker键位，然后慢慢改源代码试试就知道怎么玩了，其实挺简单的，只要掌握了方法。</li>
+</ol>
+
+<p>注意： 如果你不知道所有的功能请参考这里：<code>tmk_core/doc/keycode.txt</code>你会找到所有TMK支持的键位。</p>
+
+<h3>keymap源代码分析</h3>
+
+<p>需要注意的主要是两个部分的代码</p>
+
+<ol>
+<li>刚上来的那个数组是需要注意的</li>
+</ol>
+
+<pre><code class="language-c">    /* 0: qwerty */
+    KEYMAP_ANSI(
+        GRV, 1,   2,   3,   4,   5,   6,   7,   8,   9,   0,   MINS,EQL, BSPC, \
+        TAB, Q,   W,   E,   R,   T,   Y,   U,   I,   O,   P,   LBRC,RBRC,BSLS, \
+        ESC,A,   S,   D,   F,   G,   H,   J,   K,   L,   SCLN,QUOT,     ENT,  \
+        LSFT,Z,   X,   C,   V,   B,   N,   M,   COMM,DOT, SLSH,          FN0, \
+        LCTL,LGUI,LALT,          SPC,                     DEL, UP,HOME, END),
+</code></pre>
+
+<p>这里的注释非常有用哦，提示你这里是什么index，键盘布局，以及下面的详细布局可以自己调整哦。</p>
+
+<ol>
+<li>然后再注意FN层的这个数组</li>
+</ol>
+
+<pre><code class="language-c">const uint16_t PROGMEM fn_actions[] = {
+    /* Poker Layout */
+    [0] = ACTION_LAYER_MOMENTARY(6),  // to Fn overlay
+    [1] = ACTION_LAYER_TOGGLE(4),     // toggle arrow overlay
+    [2] = ACTION_LAYER_TOGGLE(5),     // toggle Esc overlay
+    [3] = ACTION_MODS_KEY(MOD_RCTL|MOD_RSFT, KC_ESC), // Task(RControl,RShift+Esc)
+    [4] = ACTION_LAYER_MOMENTARY(7),  // to Layout selector
+    [5] = ACTION_DEFAULT_LAYER_SET(0),  // set qwerty layout
+    [6] = ACTION_DEFAULT_LAYER_SET(1),  // set colemak layout
+    [7] = ACTION_DEFAULT_LAYER_SET(2),  // set dvorak layout
+    [8] = ACTION_DEFAULT_LAYER_SET(3),  // set workman layout
+};
+</code></pre>
+
+<p>layout里面存储的是，八层键盘布局。
+注意函数内参数为上面数组的index 看函数的内容不难看出来是什么意思。
+然后自己定制调整就非常简单了。</p>
+
+<h2>刷入键盘</h2>
+
+<p>一个键盘两种device，一种是输入，一种是刷机状态的，如果想进入刷机状态直接按主板背面的小按钮就行了。(不需要三秒钟，按一下就行了)</p>
+
+<p>查看device：<code>system_profiler SPUSBDataType</code></p>
+
+<p>键盘模式：</p>
+
+<pre><code class="language-yaml">GH60:
+
+          Product ID: 0x6060
+          Vendor ID: 0xfeed
+          Version: 0.01
+          Speed: Up to 12 Mb/sec
+          Manufacturer: geekhack
+          Location ID: 0x14100000 / 14
+          Current Available (mA): 500
+          Current Required (mA): 100
+</code></pre>
+
+<p>可以刷机的模式：</p>
+
+<pre><code class="language-yaml">ATm32U4DFU:
+
+          Product ID: 0x2ff4
+          Vendor ID: 0x03eb  (Atmel Corporation)
+          Version: 0.00
+          Serial Number: 1.0.0
+          Speed: Up to 12 Mb/sec
+          Manufacturer: ATMEL
+          Location ID: 0x14100000 / 15
+          Current Available (mA): 500
+          Current Required (mA): Unknown (Device has not been configured)
+</code></pre>
+
+<p>注意区分即可。如果要刷入信的layout进入到键盘中直接使用命令<code>make dfu</code>即可</p>
+
+<h2>总结</h2>
+
+<h3>值得参考的文档：</h3>
+
+<ol>
+<li>根目录下面的doc文件夹内的文档，这里会及时的给你当前代码目录中到底怎么构建开发环境，非常实用。</li>
+<li>gh60 下的readme文档，会告诉你怎么修改layout</li>
+</ol>
+
+<p>由于搞键盘的时间非常紧，而且我也是个机械键盘的新手，所以这里有一些用词不准确，方法不正确，还请大神批评指正！
+给各位新手一个参考时间，我从所有都是零件开始组装到最后修改完成整个键盘大概需要一天的时间，从早10点到半夜。</p>
+
+<p>最后上一个工作时候的图作为本文的结束</p>
+
+<p><img src="http://7viiaq.com1.z0.glb.clouddn.com/gh60IMG_0426.jpg" alt="" /></p>
+
+</div>
+
+<hr>
+本人博客文章采用<a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC Attribution-NonCommercial协议</a>: CC Attribution-NonCommercial 必须保留原作者署名,并且不允许用于商业用途,其他行为都是允许的。
+<hr>
+
+<script src="https://utteranc.es/client.js"
+        repo="lijianying10/RollingBlog"
+        issue-term="gh60折腾记录"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/01/03/gh60/" data-title="gh60折腾记录" data-url="http://www.philo.top/2016/01/03/gh60/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"philotop"};
+(function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+})();
+</script>
+<!-- 多说公共JS代码 end -->
+
+<hr>
+
+                </div>
+
+                <!-- Blog Sidebar Widgets Column -->
+                <div class="col-lg-3 col-12">
+
+                    <!-- Blog Search Well -->
+                    <!--                 <div class="well">
+                        <h4>Blog Search</h4>
+                        <div class="input-group">
+                        <input type="text" class="form-control">
+                        <span class="input-group-btn">
+                        <button class="btn btn-default" type="button">
+                        <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        </span>
+                        </div> -->
+                        <!-- /.input-group -->
+                        <!-- </div> -->
+
+                        <!-- Blog Categories Well -->
+                        <div class="well">
+                            <h4>TAGS</h4>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/wiki">wiki(2)</a></br><a href="/tags/thinking">thinking(3)</a></br><a href="/tags/node">node(1)</a></br><a href="/tags/iptables">iptables(1)</a></br><a href="/tags/devenv">devenv(1)</a></br><a href="/tags/elk">elk(1)</a></br><a href="/tags/oop">oop(1)</a></br><a href="/tags/html">html(1)</a></br><a href="/tags/mesos">mesos(1)</a></br><a href="/tags/tmux">tmux(1)</a></br><a href="/tags/git">git(8)</a></br><a href="/tags/nodejs">nodejs(1)</a></br><a href="/tags/DaoCloud">DaoCloud(1)</a></br><a href="/tags/java">java(2)</a></br><a href="/tags/visualization">visualization(1)</a></br><a href="/tags/elasticsearch">elasticsearch(1)</a></br><a href="/tags/requirejs">requirejs(1)</a></br><a href="/tags/network">network(2)</a></br><a href="/tags/dns">dns(1)</a></br><a href="/tags/ss">ss(1)</a></br><a href="/tags/css">css(1)</a></br><a href="/tags/docker">docker(22)</a></br><a href="/tags/centos">centos(1)</a></br><a href="/tags/mysql">mysql(3)</a></br><a href="/tags/grub">grub(1)</a></br><a href="/tags/butterfly">butterfly(1)</a></br><a href="/tags/web">web(3)</a></br><a href="/tags/php">php(1)</a></br><a href="/tags/mongodab">mongodab(1)</a></br><a href="/tags/putty">putty(2)</a></br><a href="/tags/RHEL">RHEL(1)</a></br><a href="/tags/PXE">PXE(1)</a></br><a href="/tags/ci">ci(1)</a></br><a href="/tags/iPXE">iPXE(1)</a></br><a href="/tags/gh60">gh60(1)</a></br><a href="/tags/env">env(2)</a></br><a href="/tags/DES">DES(1)</a></br><a href="/tags/microservice">microservice(2)</a></br><a href="/tags/Ubuntu">Ubuntu(1)</a></br><a href="/tags/logstash">logstash(1)</a></br><a href="/tags/c">c(1)</a></br><a href="/tags/marathon">marathon(1)</a></br><a href="/tags/owncloud">owncloud(1)</a></br><a href="/tags/npm">npm(1)</a></br><a href="/tags/virtualbox">virtualbox(3)</a></br><a href="/tags/python">python(4)</a></br><a href="/tags/delegate">delegate(1)</a></br><a href="/tags/mac">mac(2)</a></br><a href="/tags/tray">tray(1)</a></br><a href="/tags/require.js">require.js(1)</a></br><a href="/tags/etcd">etcd(3)</a></br><a href="/tags/postgresql">postgresql(1)</a></br><a href="/tags/systemd-resolved">systemd-resolved(1)</a></br><a href="/tags/js">js(8)</a></br><a href="/tags/phpExtension">phpExtension(1)</a></br><a href="/tags/rancher">rancher(2)</a></br><a href="/tags/html5">html5(1)</a></br><a href="/tags/test">test(1)</a></br>
+                                    </ul>
+                                </div>
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/homebrew">homebrew(1)</a></br><a href="/tags/linux">linux(5)</a></br><a href="/tags/macos">macos(1)</a></br><a href="/tags/Cow">Cow(1)</a></br><a href="/tags/yaml">yaml(1)</a></br><a href="/tags/golang">golang(23)</a></br><a href="/tags/ucloud">ucloud(1)</a></br><a href="/tags/redsocks">redsocks(1)</a></br><a href="/tags/article">article(1)</a></br><a href="/tags/Docker">Docker(2)</a></br><a href="/tags/minecraft">minecraft(2)</a></br><a href="/tags/vim">vim(3)</a></br><a href="/tags/storage">storage(1)</a></br><a href="/tags/atom">atom(2)</a></br><a href="/tags/MongoDB">MongoDB(1)</a></br><a href="/tags/runc">runc(1)</a></br><a href="/tags/bootstrap">bootstrap(1)</a></br><a href="/tags/HomeBrew">HomeBrew(1)</a></br><a href="/tags/iterm2">iterm2(1)</a></br><a href="/tags/flannel">flannel(1)</a></br><a href="/tags/RunC">RunC(1)</a></br><a href="/tags/bazel">bazel(2)</a></br><a href="/tags/dev">dev(2)</a></br><a href="/tags/profiling">profiling(2)</a></br><a href="/tags/kibina">kibina(1)</a></br><a href="/tags/android">android(1)</a></br><a href="/tags/hexo">hexo(3)</a></br><a href="/tags/nginx">nginx(6)</a></br><a href="/tags/ubuntu">ubuntu(5)</a></br><a href="/tags/career">career(1)</a></br><a href="/tags/syslinux">syslinux(1)</a></br><a href="/tags/aglio">aglio(1)</a></br><a href="/tags/blog">blog(1)</a></br><a href="/tags/liteIDE">liteIDE(1)</a></br><a href="/tags/metaprogramming">metaprogramming(1)</a></br><a href="/tags/BusyBox">BusyBox(1)</a></br><a href="/tags/杂谈">杂谈(1)</a></br><a href="/tags/thrift">thrift(1)</a></br><a href="/tags/rkt">rkt(1)</a></br><a href="/tags/ssl">ssl(2)</a></br><a href="/tags/letsencrypt">letsencrypt(1)</a></br><a href="/tags/consul">consul(1)</a></br><a href="/tags/mongodb">mongodb(3)</a></br><a href="/tags/busybox">busybox(1)</a></br><a href="/tags/coreos">coreos(1)</a></br><a href="/tags/GC">GC(1)</a></br><a href="/tags/Linux">Linux(13)</a></br><a href="/tags/ShadowSocks">ShadowSocks(1)</a></br><a href="/tags/registry">registry(3)</a></br><a href="/tags/CoreOS">CoreOS(1)</a></br><a href="/tags/netplan">netplan(1)</a></br><a href="/tags/godoc">godoc(1)</a></br><a href="/tags/osx">osx(4)</a></br><a href="/tags/datatables">datatables(1)</a></br><a href="/tags/StackStorm2">StackStorm2(1)</a></br><a href="/tags/tenxcloud">tenxcloud(1)</a></br><a href="/tags/shell">shell(6)</a></br>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+
+                        <!-- Side Widget Well -->
+                        <div class="well">
+                            <h4>近期文章</h4>
+                            <a href="/2021/03/14/metaprogramming/">Metaprogramming and code generation/replace in action</a></br><a href="/2021/02/15/dockerprivateregistryen/">deploy docker registry under private network</a></br><a href="/2021/02/14/golangvimdev/">my vim golang programming environment</a></br><a href="/2021/02/06/bazelmacro/">bazel macro 的开发</a></br><a href="/2021/01/15/bazelboost/">bazel 使用经验和记录</a></br><a href="/2021/01/14/dockerprivateregistry/">小型团队内网创建docker registry</a></br><a href="/2021/01/14/ubuntudnssystemdresolved/">网关服务器部署DNS的冲突问题解决</a></br><a href="/2021/01/13/iptablesredsocksdocker/">iptables 使用 Redsocks 时候 Docker 没有网络问题的分析</a></br>
+                        </div>
+                        <div class="well">
+                            <h4>友情链接</h4>
+                            <a href="https://linux.cn/">Linux中国</a></br>
+                            <a href="http://locez.com/">LOCEZ</a></br>
+                            <a href="http://blog.ibeats.top/">CI_Knight</a>
+                        </div>
+
+                </div>
+
+            </div>
+            <!-- /.row -->
+
+            <hr>
+
+            <!-- Footer -->
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Copyright &copy; philo.top PowerBy <a href="https://github.com/lijianying10/RollingBlog">RollingBlog</a> 2020 Since 2015</p>
+                        <!-- Global site tag (gtag.js) - Google Analytics -->
+                        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173403528-1"></script>
+                        <script>
+                          window.dataLayer = window.dataLayer || [];
+                          function gtag(){dataLayer.push(arguments);}
+                          gtag('js', new Date());
+                        
+                          gtag('config', 'UA-173403528-1');
+                        </script>
+
+                    </div>
+                </div>
+                <!-- /.row -->
+            </footer>
+
+        </div>
+        <!-- /.container -->
+
+        <!-- jQuery -->
+        <script src="/js/jquery.js"></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/prism.js"></script>
+
+    </body>
+
+</html>
+

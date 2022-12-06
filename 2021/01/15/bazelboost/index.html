@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>bazel 使用经验和记录</title>
+        <link href="/css/prism.css" rel="stylesheet">
+        <link href="/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/css/blog-post.css" rel="stylesheet">
+        <link href="/css/typo.css" rel="stylesheet">
+        <link rel="shortcut icon" href="/favicon.ico" />
+    </head>
+
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Philo</a>
+                </div>
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/">HOME</a>
+                        </li>
+                        <li>
+                            <a href="/archive/">Archive</a>
+                        </li>
+                        <li>
+                            <a href="/2015/02/21/index/index.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container -->
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container" style="
+                margin-top: 70px;
+                ">
+
+            <div class="row">
+
+                <!-- Blog Post Content Column -->
+                <div class="col-lg-9 col-12">
+
+                    <!-- Blog Post -->
+
+<!-- Title -->
+<h1><a href="/2021/01/15/bazelboost/">bazel 使用经验和记录</a></h1>
+ 
+<!-- Author -->
+<p class="lead">
+Tags
+
+<a href="/tags/bazel">bazel</a>
+
+</p>
+
+<hr>
+
+<!-- Date/Time -->
+<p><span class="glyphicon glyphicon-time"></span> 2021-01-15 19:01:18</p>
+
+<hr>
+
+<div class="typo">
+<p>近期我自己做的项目已经用上 Bazel 这款产品了。 它是我目前学过的最难学的一门技术（工具）了。 下面总结一下我的学习和使用过程和方法。
+一方面我想提升自己的总结能力，另外一方面我自己学习的时候很寂寞身边没有人会这门技术，大多都是用一用编译就好了， 并不想深入了解。</p>
+
+<h2>我为什么要用bazel</h2>
+
+<p>我最近在做3d建模视频我的主要业务逻辑使用的go语言，blender只能使用python语言，不少操作的驱动需要使用python实现。
+不少SVG从矢量到标量的计算用到了NodeJS，并且我的项目并不能统一语言去做。</p>
+
+<p>依赖复杂，我有很多种action而且未来还会有更多。例如目前我有的操作：</p>
+
+<ol>
+<li>SVG矢量转标量</li>
+<li>依赖上面的结果让两个svg path 正交 绘制 mesh 并且输出 Wavefront OBJ 3d 模型的格式 （未来还会有更多的 Mesh 建模算法来应对各种不同的建模场景）</li>
+<li>运行blender background 模式调用我写的 python library 和 python RPC server 对接 golang 建模用业务层。</li>
+<li>blender建模和动画的结果之间可以相互引用和复用。</li>
+</ol>
+
+<p>所以这是一个相当复杂的 Dag （有向无环图） 因此每当我动一个比较底层的算法我需要 快速的 正确的 构建并且执行Dag依赖树。</p>
+
+<p>当我编译好我的blender工程之后我就可以把blender文件上传到GPU集群来渲染视频。</p>
+
+<p>一个更简单的为什么要使用bazel的例子：</p>
+
+<p>当你自己写了一个 golang 程序帮助你输入一个 SQL 语句输出一个对应的驱动包来避免使用 ORM 当你修改了 code gen 的模板时你怎么知道该更新那些和测试那些依赖于它的目标 ( Target ) 呢?</p>
+
+<p>并且你并不想写一大堆重复的类似的代码 干体力活 希望机器生成代码， 并且你知道 Golang 没有泛型造成很多重复代码时， 我们唯一的选择就只能是设计一个Code Generator。</p>
+
+<h2>学习路线</h2>
+
+<p>这里记录一下我的学习路线方便当我自己忘记知识点可以看这篇文字帮助自己复习， 我的学习目标并不是 使用 bazel  而是熟练的掌握开发 rules 应对各类情况。</p>
+
+<h3>Concepts 了解基本概念全部读完。</h3>
+
+<p>举个例子：</p>
+
+<pre><code>Transitive dependencies
+Bazel only reads dependencies listed in your WORKSPACE file. If your project (A) depends on another project (B) which lists a dependency on a third project (C) in its WORKSPACE file, youll have to add both B and C to your projects WORKSPACE file. This requirement can balloon the WORKSPACE file size, but limits the chances of having one library include C at version 1.0 and another include C at 2.0.
+</code></pre>
+
+<p>当你的 Workspace 越来越大时如果你能想起这里来。 你会发现并不是忘记读了什么文档使用什么方法而是就这样设计的。</p>
+
+<p>Concepts 里面有非常多设计者的意图，是一个系统设计非常好的学习资料。</p>
+
+<h3>Extending Bazel 中的 Extension Overview 和 Concepts</h3>
+
+<p>Extending Bazel 其实就是写rules来处理自己的工作情况。
+这里一定都要读完，意义很大比如一个重要的概念 Depsets 你读完文档之后并不知道它是 immutable variable。
+如果你并不理解文档的情况下就会一脸懵逼的碰到 rules 的设计问题，很多变量是只读的文档里面没有提到但是你要反应过来。
+所以前期文档阅读量不足会耽误很多时间。因为遇到问题你反应不过来。</p>
+
+<h3>换个角度继续学</h3>
+
+<p>当我看完上面的文档时还不知道怎么下手， 云里雾里， 这时候有一个重要的 blog 出现：
+<a href="https://www.jayconrod.com/posts/106/writing-bazel-rules--simple-binary-rule">https://www.jayconrod.com/posts/106/writing-bazel-rules--simple-binary-rule</a></p>
+
+<p>这些文章需要拿出来反复琢磨：</p>
+
+<ol>
+<li>Writing Bazel rules: simple binary rule 帮助你学习如何构建好一个target</li>
+<li>Writing Bazel rules: library rule, depsets, providers 帮助你学习如何处理好依赖，很重要，因为你知道bazel的核心依赖算法是DAG</li>
+<li>Writing Bazel rules: repository rules 帮助你把外部的软件转换成一个 bazel 系统可以接受的依赖很重要，比如说你构建时依赖了 blender 的二进制文件去运行， 它就会帮助你做到类似于 <code>rules_go</code> 一样下载 golang 的 toolchain</li>
+</ol>
+
+<p>以上是写的非常好的非官方的tutorial。</p>
+
+<p>我看到这时还是不会写。接下来开始读源码推荐阅读：</p>
+
+<ol>
+<li>一个复杂的： <a href="https://github.com/bazelbuild/rules_go">GITHUB REPO</a> 去看首页文档写的重要API的实现。</li>
+<li>一个简单的： <a href="https://github.com/zaucy/rules_blender">GITHUB REPO</a> 去看比较简单的case的关键rules实现。</li>
+</ol>
+
+<p>当我看到这里时我基本上已经写了个大概。因为已经大概熟悉了 Skylark 这门语言。进入爬坑阶段。</p>
+
+<h3>最重要的我常常需要参考的关键数据结构</h3>
+
+<p>Actions <a href="https://docs.bazel.build/versions/master/skylark/lib/actions.html">https://docs.bazel.build/versions/master/skylark/lib/actions.html</a> 这是核心中的核心
+Files <a href="https://docs.bazel.build/versions/master/skylark/lib/File.html">https://docs.bazel.build/versions/master/skylark/lib/File.html</a> 写 rules 其实就是灵活的处理你的代码文件与编译器之间做沟通。
+DefaultInfo <a href="https://docs.bazel.build/versions/master/skylark/lib/DefaultInfo.html">https://docs.bazel.build/versions/master/skylark/lib/DefaultInfo.html</a> 理解好这个概念可以帮助你与其他开发者写的 Rules 很好的做对接和依赖。</p>
+
+<h2>爬坑经验</h2>
+
+<h3>代理方案选择</h3>
+
+<ol>
+<li>linux iptables ip filter 省事</li>
+<li>windows Proxifier</li>
+</ol>
+
+<p>windows 注意：</p>
+
+<p>因为 Proxifier 是按照进程为最基本单位的， 当你看不到具体那个进程网络卡住了可以使用工具，可以看到进程树：</p>
+
+<p>process monitor： <a href="https://docs.microsoft.com/en-us/sysinternals/downloads/procmon">https://docs.microsoft.com/en-us/sysinternals/downloads/procmon</a></p>
+
+<p>目前我的进程rules: <code>bazel.exe;java.exe;fetch_repo.exe;Conhost.exe;go.exe;git.exe;git-remote-https.exe;</code> 供参考</p>
+
+<h3>管理你系统外的依赖</h3>
+
+<p>系统外依赖的定义是： 你并不关心实现的代码。仅仅是下载， 比如说 GJSON 这类的</p>
+
+<p>Cons:</p>
+
+<p>你在A项目中引用了B项目 B项目引用了GJSON 那么A的workspace 也需要管理 GJSON 依赖。 这时你的 WORKSPACE 文件会像气球一样膨胀
+我遇到这个坑是因为我对 Concept 文档理解的不够深入。</p>
+
+<p>Pros:</p>
+
+<p>可以实现 Shadowing dependencies 在文档： <a href="https://docs.bazel.build/versions/master/external.html">https://docs.bazel.build/versions/master/external.html</a> 提到的</p>
+
+<h3>关于 actions run 这个函数的坑</h3>
+
+<p>这些坑都是希望假如我身边有人会这技术我希望他能提前告诉我的</p>
+
+<ol>
+<li><code>declare_file</code> 一定要放到output里面。 这样当你的 actions.run 结束时文件没创建， 会显示编译错误。</li>
+<li><code>inputs</code> 一定要把你依赖的所有文件都放到这个数组里面。 就算 bazel query 时的确显示出了正确的依赖关系， 但是 inputs 没有声明这些文件在actions中依赖了你会你修改了文件不会重新编译。 会破坏编译的正确性。</li>
+<li><code>mnemonic</code> 只能是一个单词，放入要给动词可以帮助你理解正在并行编译时在做什么动作。</li>
+<li><code>executable</code> 不要依赖与你的path或者一个绝对路径那就出现了环境依赖，要使用 target 来保证整个系统时封闭的来保证你的 <code>正确性</code></li>
+<li><code>use_default_shell_env</code> <code>False</code> = 有节操 <code>True</code> = 没节操 如果你选择省事至少放到Docker容器里面定义好Path运行。不然会出现环境依赖以及脱离 bazel 环境管理的软件依赖。</li>
+<li><code>tools</code> 假如你在构建中依赖了其他的二进制文件， 例如我在运行 blender 我的入口时 python 的 RPC Server， 我用 Golang 写 RPC client 你很熟练的通过 arguments 或者 env 把你的 Golang client 二进制文件放到了 执行的地方，但是你会新奇的发现 bazel 系统的构建 DAG 树的 Graphviz 图纸是有依赖的但是它并不构建， 然而你读了很多遍文档也不知道为什么你依赖的二进制 bazel target 不编译因为文档的描述是这样的： <code>tools: List or depset of any tools needed by the action. Tools are inputs with additional runfiles that are automatically made available to the action.</code> 现在我可以高兴的告诉你这时候要放到tools里面。出现这个问题并不是文档有问题，是 bazel 的设计者经验丰富抽象层次高造成的。但是我给跪了。</li>
+</ol>
+
+<h4>input 数组的开发技巧</h4>
+
+<p>例如说你依赖了 <code>py_library</code> 这个 bazel native rule</p>
+
+<p>第一你需要debug看这个rules返回给你什么info</p>
+
+<p>下面时rules label attr</p>
+
+<pre><code>&quot;util&quot;:attr.label(),
+</code></pre>
+
+<p>输入参数label例子： 下面这个例子的util其实就是一个 <code>py_library rule</code></p>
+
+<pre><code>util = &quot;//blenderutil:util&quot;,
+</code></pre>
+
+<p>下面时skylark 调试代码, 可以看到有什么Info</p>
+
+<pre><code>print(ctx.attr.util)
+</code></pre>
+
+<p>一点点的调试最后可以得到下面的代码：</p>
+
+<pre><code>for f in ctx.attr.util[PyInfo].transitive_sources.to_list():
+    input_list.append(f)
+</code></pre>
+
+<p>你会得到你所有依赖的内容如果你的依赖很复杂 比如说  <code>A-&gt;B-&gt;C</code>  <code>A-&gt;D-&gt;C</code> 你会发现C重复了。可以直接用depset解决这个问题 <code>new_var = depset([这里时你的数组，或者直接把变量放进去])</code></p>
+
+<h4>executable 的例子</h4>
+
+<p>定义label</p>
+
+<pre><code>&quot;_blenderRunner&quot;:attr.label(
+    default = Label(&quot;//blenderRunner:blenderRunner&quot;),
+    executable = True,
+    cfg = &quot;exec&quot;
+),
+</code></pre>
+
+<p>action.run 参数例子</p>
+
+<pre><code>executable = ctx.executable._blenderRunner, 
+</code></pre>
+
+<h2>一些感悟</h2>
+
+<h3>为什么 golang 要用 bazel</h3>
+
+<p>目前 gomod 已经做的够好了，就算在我的这个工程里面也会使用 golang gomod 来开发和测试我的代码。
+但是与 bazel 结合其实成本并不高有重要的工具叫 <code>gazelle</code>
+他可以帮助你转换 gomod 项目成 bazel 项目。
+也可以帮助你同步 gomod 到 bazel。</p>
+
+<p>通过如下命令：</p>
+
+<pre><code>bazel run //:gazelle # 初始化 
+bazel run //:gazelle -- update-repos -from_file=go.mod -to_macro=deps.bzl%go_dependencies # 更新
+</code></pre>
+
+<p>需要注意：</p>
+
+<ol>
+<li>你还是要显式从 WORKSPACE 或者你自己的 bazel function 中声明你的 <code>go_repository</code> rule 来定义依赖。</li>
+<li>关于 golang bazel 项目吐槽最多的 protobuf 生成之后 IDE 很难结合的问题可以结合这个思路 <a href="https://github.com/nikunjy/golink">https://github.com/nikunjy/golink</a> 另外我在自己读 bazel rule 开发文档的时候看到其实我们是可以通过创建软连接来帮助IDE找到我们已经生成的代码。</li>
+<li>上面的问题还有另外一个解决思路， 修改 Gocode 的实现，目前 Gocode 这个项目已经有 daemon 了。 但是它扫描代码并不积极。</li>
+</ol>
+
+<h3>一个恰到好处的设计</h3>
+
+<p>从actions.run这里可以看到，
+每个参数设计的都很到位， 尤其是限制的很到位， 并且每个每个参数都不能删掉， 并且很好的兼顾了各种情况。
+新手只可能对概念的理解和知识的掌握不到位， 很难产生一些错误， 这大概就是牛逼的架构师设计的接口。
+把安全做到语言级别， 给你报错而不是你在写代码的时候给你各种需要主动遵守的规范。</p>
+
+<p>如果你并不享受这些对你的限制，还不如用 python 或者 make 之类作为构建工具。</p>
+
+<h3>一些 bazel 相比其他构建系统的好处</h3>
+
+<ol>
+<li>封装的好，会让构建过程产出结果稳定，受环境的影响可以做到尽量小，也可以让依赖多个版本并存</li>
+<li>Starlark 语言设计的好， 类似 python 写起来贼舒服被裁剪的很好， 一方面是影响话编译环境的API都被裁掉了（你并不能很容易的写文件到磁盘到任意位置）内部帮助你构建的变量都是只读的。当然它的好是相对于 GnuMake 和 CMake 相比。</li>
+<li>因为拓展性好，基本上你能想到的语言都有了现成的Rules支持。</li>
+<li>对 Code Generation 非常友好。</li>
+<li><code>正确</code> <code>快速</code> 实至名归</li>
+</ol>
+
+<h2>最后</h2>
+
+<p>很开心我看到了 Bazel 的门， 希望我能早日入门。</p>
+
+</div>
+
+<hr>
+本人博客文章采用<a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC Attribution-NonCommercial协议</a>: CC Attribution-NonCommercial 必须保留原作者署名,并且不允许用于商业用途,其他行为都是允许的。
+<hr>
+
+<script src="https://utteranc.es/client.js"
+        repo="lijianying10/RollingBlog"
+        issue-term="bazel 使用经验和记录"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2021/01/15/bazelboost/" data-title="bazel 使用经验和记录" data-url="http://www.philo.top/2021/01/15/bazelboost/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"philotop"};
+(function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+})();
+</script>
+<!-- 多说公共JS代码 end -->
+
+<hr>
+
+                </div>
+
+                <!-- Blog Sidebar Widgets Column -->
+                <div class="col-lg-3 col-12">
+
+                    <!-- Blog Search Well -->
+                    <!--                 <div class="well">
+                        <h4>Blog Search</h4>
+                        <div class="input-group">
+                        <input type="text" class="form-control">
+                        <span class="input-group-btn">
+                        <button class="btn btn-default" type="button">
+                        <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        </span>
+                        </div> -->
+                        <!-- /.input-group -->
+                        <!-- </div> -->
+
+                        <!-- Blog Categories Well -->
+                        <div class="well">
+                            <h4>TAGS</h4>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/wiki">wiki(2)</a></br><a href="/tags/thinking">thinking(3)</a></br><a href="/tags/node">node(1)</a></br><a href="/tags/iptables">iptables(1)</a></br><a href="/tags/devenv">devenv(1)</a></br><a href="/tags/elk">elk(1)</a></br><a href="/tags/oop">oop(1)</a></br><a href="/tags/html">html(1)</a></br><a href="/tags/mesos">mesos(1)</a></br><a href="/tags/tmux">tmux(1)</a></br><a href="/tags/git">git(8)</a></br><a href="/tags/nodejs">nodejs(1)</a></br><a href="/tags/DaoCloud">DaoCloud(1)</a></br><a href="/tags/java">java(2)</a></br><a href="/tags/visualization">visualization(1)</a></br><a href="/tags/elasticsearch">elasticsearch(1)</a></br><a href="/tags/requirejs">requirejs(1)</a></br><a href="/tags/network">network(2)</a></br><a href="/tags/dns">dns(1)</a></br><a href="/tags/ss">ss(1)</a></br><a href="/tags/css">css(1)</a></br><a href="/tags/docker">docker(22)</a></br><a href="/tags/centos">centos(1)</a></br><a href="/tags/mysql">mysql(3)</a></br><a href="/tags/grub">grub(1)</a></br><a href="/tags/butterfly">butterfly(1)</a></br><a href="/tags/web">web(3)</a></br><a href="/tags/php">php(1)</a></br><a href="/tags/mongodab">mongodab(1)</a></br><a href="/tags/putty">putty(2)</a></br><a href="/tags/RHEL">RHEL(1)</a></br><a href="/tags/PXE">PXE(1)</a></br><a href="/tags/ci">ci(1)</a></br><a href="/tags/iPXE">iPXE(1)</a></br><a href="/tags/gh60">gh60(1)</a></br><a href="/tags/env">env(2)</a></br><a href="/tags/DES">DES(1)</a></br><a href="/tags/microservice">microservice(2)</a></br><a href="/tags/Ubuntu">Ubuntu(1)</a></br><a href="/tags/logstash">logstash(1)</a></br><a href="/tags/c">c(1)</a></br><a href="/tags/marathon">marathon(1)</a></br><a href="/tags/owncloud">owncloud(1)</a></br><a href="/tags/npm">npm(1)</a></br><a href="/tags/virtualbox">virtualbox(3)</a></br><a href="/tags/python">python(4)</a></br><a href="/tags/delegate">delegate(1)</a></br><a href="/tags/mac">mac(2)</a></br><a href="/tags/tray">tray(1)</a></br><a href="/tags/require.js">require.js(1)</a></br><a href="/tags/etcd">etcd(3)</a></br><a href="/tags/postgresql">postgresql(1)</a></br><a href="/tags/systemd-resolved">systemd-resolved(1)</a></br><a href="/tags/js">js(8)</a></br><a href="/tags/phpExtension">phpExtension(1)</a></br><a href="/tags/rancher">rancher(2)</a></br><a href="/tags/html5">html5(1)</a></br><a href="/tags/test">test(1)</a></br>
+                                    </ul>
+                                </div>
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/homebrew">homebrew(1)</a></br><a href="/tags/linux">linux(5)</a></br><a href="/tags/macos">macos(1)</a></br><a href="/tags/Cow">Cow(1)</a></br><a href="/tags/yaml">yaml(1)</a></br><a href="/tags/golang">golang(23)</a></br><a href="/tags/ucloud">ucloud(1)</a></br><a href="/tags/redsocks">redsocks(1)</a></br><a href="/tags/article">article(1)</a></br><a href="/tags/Docker">Docker(2)</a></br><a href="/tags/minecraft">minecraft(2)</a></br><a href="/tags/vim">vim(3)</a></br><a href="/tags/storage">storage(1)</a></br><a href="/tags/atom">atom(2)</a></br><a href="/tags/MongoDB">MongoDB(1)</a></br><a href="/tags/runc">runc(1)</a></br><a href="/tags/bootstrap">bootstrap(1)</a></br><a href="/tags/HomeBrew">HomeBrew(1)</a></br><a href="/tags/iterm2">iterm2(1)</a></br><a href="/tags/flannel">flannel(1)</a></br><a href="/tags/RunC">RunC(1)</a></br><a href="/tags/bazel">bazel(2)</a></br><a href="/tags/dev">dev(2)</a></br><a href="/tags/profiling">profiling(2)</a></br><a href="/tags/kibina">kibina(1)</a></br><a href="/tags/android">android(1)</a></br><a href="/tags/hexo">hexo(3)</a></br><a href="/tags/nginx">nginx(6)</a></br><a href="/tags/ubuntu">ubuntu(5)</a></br><a href="/tags/career">career(1)</a></br><a href="/tags/syslinux">syslinux(1)</a></br><a href="/tags/aglio">aglio(1)</a></br><a href="/tags/blog">blog(1)</a></br><a href="/tags/liteIDE">liteIDE(1)</a></br><a href="/tags/metaprogramming">metaprogramming(1)</a></br><a href="/tags/BusyBox">BusyBox(1)</a></br><a href="/tags/杂谈">杂谈(1)</a></br><a href="/tags/thrift">thrift(1)</a></br><a href="/tags/rkt">rkt(1)</a></br><a href="/tags/ssl">ssl(2)</a></br><a href="/tags/letsencrypt">letsencrypt(1)</a></br><a href="/tags/consul">consul(1)</a></br><a href="/tags/mongodb">mongodb(3)</a></br><a href="/tags/busybox">busybox(1)</a></br><a href="/tags/coreos">coreos(1)</a></br><a href="/tags/GC">GC(1)</a></br><a href="/tags/Linux">Linux(13)</a></br><a href="/tags/ShadowSocks">ShadowSocks(1)</a></br><a href="/tags/registry">registry(3)</a></br><a href="/tags/CoreOS">CoreOS(1)</a></br><a href="/tags/netplan">netplan(1)</a></br><a href="/tags/godoc">godoc(1)</a></br><a href="/tags/osx">osx(4)</a></br><a href="/tags/datatables">datatables(1)</a></br><a href="/tags/StackStorm2">StackStorm2(1)</a></br><a href="/tags/tenxcloud">tenxcloud(1)</a></br><a href="/tags/shell">shell(6)</a></br>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+
+                        <!-- Side Widget Well -->
+                        <div class="well">
+                            <h4>近期文章</h4>
+                            <a href="/2021/03/14/metaprogramming/">Metaprogramming and code generation/replace in action</a></br><a href="/2021/02/15/dockerprivateregistryen/">deploy docker registry under private network</a></br><a href="/2021/02/14/golangvimdev/">my vim golang programming environment</a></br><a href="/2021/02/06/bazelmacro/">bazel macro 的开发</a></br><a href="/2021/01/15/bazelboost/">bazel 使用经验和记录</a></br><a href="/2021/01/14/dockerprivateregistry/">小型团队内网创建docker registry</a></br><a href="/2021/01/14/ubuntudnssystemdresolved/">网关服务器部署DNS的冲突问题解决</a></br><a href="/2021/01/13/iptablesredsocksdocker/">iptables 使用 Redsocks 时候 Docker 没有网络问题的分析</a></br>
+                        </div>
+                        <div class="well">
+                            <h4>友情链接</h4>
+                            <a href="https://linux.cn/">Linux中国</a></br>
+                            <a href="http://locez.com/">LOCEZ</a></br>
+                            <a href="http://blog.ibeats.top/">CI_Knight</a>
+                        </div>
+
+                </div>
+
+            </div>
+            <!-- /.row -->
+
+            <hr>
+
+            <!-- Footer -->
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Copyright &copy; philo.top PowerBy <a href="https://github.com/lijianying10/RollingBlog">RollingBlog</a> 2020 Since 2015</p>
+                        <!-- Global site tag (gtag.js) - Google Analytics -->
+                        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173403528-1"></script>
+                        <script>
+                          window.dataLayer = window.dataLayer || [];
+                          function gtag(){dataLayer.push(arguments);}
+                          gtag('js', new Date());
+                        
+                          gtag('config', 'UA-173403528-1');
+                        </script>
+
+                    </div>
+                </div>
+                <!-- /.row -->
+            </footer>
+
+        </div>
+        <!-- /.container -->
+
+        <!-- jQuery -->
+        <script src="/js/jquery.js"></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/prism.js"></script>
+
+    </body>
+
+</html>
+

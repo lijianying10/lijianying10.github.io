@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>StackStorm介绍与入门</title>
+        <link href="/css/prism.css" rel="stylesheet">
+        <link href="/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/css/blog-post.css" rel="stylesheet">
+        <link href="/css/typo.css" rel="stylesheet">
+        <link rel="shortcut icon" href="/favicon.ico" />
+    </head>
+
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Philo</a>
+                </div>
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/">HOME</a>
+                        </li>
+                        <li>
+                            <a href="/archive/">Archive</a>
+                        </li>
+                        <li>
+                            <a href="/2015/02/21/index/index.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container -->
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container" style="
+                margin-top: 70px;
+                ">
+
+            <div class="row">
+
+                <!-- Blog Post Content Column -->
+                <div class="col-lg-9 col-12">
+
+                    <!-- Blog Post -->
+
+<!-- Title -->
+<h1><a href="/2017/04/30/IntroductionStackStorm1/">StackStorm介绍与入门</a></h1>
+ 
+<!-- Author -->
+<p class="lead">
+Tags
+
+<a href="/tags/docker">docker</a>
+
+<a href="/tags/StackStorm2">StackStorm2</a>
+
+</p>
+
+<hr>
+
+<!-- Date/Time -->
+<p><span class="glyphicon glyphicon-time"></span> 2017-04-30 17:25:57</p>
+
+<hr>
+
+<div class="typo">
+<h2>背景</h2>
+
+<p>在日常运维工作中经常使用的脚本为了提供给别人用,为了降低出错概率与操作复杂度，所以这里介绍一下StackStorm2的最基本使用与安装。</p>
+
+<p>在日常开发工作中很多积累下来的知识需要<code>脚本化</code>-&gt;<code>自动化</code>在这一过程中需要做到<code>知识可自动执行</code>节省培训时间。</p>
+
+<p>请先通读之后再做实践。</p>
+
+<h2>介绍</h2>
+
+<p>StackStorm2 是一种DevOps工具，包括顺序简单的工作流，包括Mistral工作流，包括触发器等。</p>
+
+<p>在下面这个列表中列出一些笔者认为能够快速直观的学习ST2的官方文档列表。
+按照顺序读可以快速掌握使用方法方便接下来继续学习。可以节约很多时间。</p>
+
+<ol>
+<li><a href="https://docs.stackstorm.com/overview.html">功能介绍阅读</a></li>
+<li><a href="https://docs.stackstorm.com/install/overview.html">ST2全局关系图,在学习的时候适合来回做参考</a></li>
+<li><a href="https://docs.stackstorm.com/start.html">st2命令掌握,cli是最强大的,图形界面适合给别人调用你写的功能</a></li>
+<li><a href="https://docs.stackstorm.com/actions.html">开始尝试写action，写完了之后使用<code>st2 reload --register-all</code>注册你写的代码</a></li>
+<li><a href="https://docs.stackstorm.com/actionchain.html">开始尝试把action结合起来一起运行</a></li>
+</ol>
+
+<h2>快速安装用的 Dockerfile</h2>
+
+<p>请查看链接<a href="https://github.com/lijianying10/FixLinux/tree/master/st2">https://github.com/lijianying10/FixLinux/tree/master/st2</a></p>
+
+<p>构建流程描述：<a href="https://github.com/lijianying10/FixLinux/blob/master/st2/Dockerfile">https://github.com/lijianying10/FixLinux/blob/master/st2/Dockerfile</a></p>
+
+<pre><code class="language-sh">FROM ubuntu:16.04
+COPY st2ctl st2.conf supervisord.conf docker-entrypoint.sh 
+RUN apt-get update &amp;&amp; \
+# 安装基本组件
+apt-get install -y build-essential wget gnupg-curl curl sudo apache2-utils vim apt-utils supervisor &amp;&amp; \
+
+# 安装 ST2
+os=ubuntu dist=xenial curl -s https://packagecloud.io/install/repositories/StackStorm/stable/script.deb.sh | sudo bash &amp;&amp; \
+apt-get update &amp;&amp; \
+apt-get install -y st2  &amp;&amp; \
+
+# 安装nginx 
+apt-key adv --fetch-keys http://nginx.org/keys/nginx_signing.key &amp;&amp; \
+echo 'deb http://nginx.org/packages/ubuntu/ xenial nginx' &gt;&gt; /etc/apt/sources.list.d/nginx.list &amp;&amp; \
+apt-get update &amp;&amp; \
+apt-get install -y st2web nginx &amp;&amp; \
+rm /etc/nginx/conf.d/default.conf &amp;&amp; \
+cp /usr/share/doc/st2/conf/nginx/st2.conf /etc/nginx/conf.d/ &amp;&amp; \
+
+# 安装kubectl tini
+curl -o /bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.6.1/bin/linux/amd64/kubectl &amp;&amp; \
+chmod +x /bin/kubectl &amp;&amp; \
+wget https://github.com/krallin/tini/releases/download/v0.14.0/tini-amd64 -O /bin/tini &amp;&amp; \
+chmod +x /bin/tini &amp;&amp; \
+
+# 复制配置文件
+mv /st2.conf /etc/st2/ &amp;&amp; \
+mv supervisord.conf /etc/supervisor/supervisord.conf &amp;&amp; \
+mv /st2ctl /usr/bin/st2ctl &amp;&amp; \
+chmod +x /usr/bin/st2ctl &amp;&amp; \
+
+# 安装python pip
+curl -SsL https://bootstrap.pypa.io/get-pip.py | python &amp;&amp; \
+
+# 安装docker client
+pip install &amp;&amp; \
+ wget https://get.docker.com/builds/Linux/x86_64/docker-17.05.0-ce.tgz &amp;&amp; \
+ tar xf docker-17.05.0-ce.tgz &amp;&amp; \
+mv docker/docker /bin/docker &amp;&amp; \
+rm -rf docker docker-17.05.0-ce.tgz
+
+ENTRYPOINT [&quot;/bin/tini&quot;, &quot;--&quot;]
+CMD bash /docker-entrypoint.sh
+</code></pre>
+
+<p><code>注意：</code> 笔者裁剪掉了chatops以及Mistral原因是在前期刚学习的时候并不能用上。还能节省大量配置时间。</p>
+
+<p>在构建中加入了entrypoint脚本，是启动的时候执行的脚本流程描述如下：</p>
+
+<p>启动流程描述 <a href="https://github.com/lijianying10/FixLinux/blob/master/st2/docker-entrypoint.sh">https://github.com/lijianying10/FixLinux/blob/master/st2/docker-entrypoint.sh</a></p>
+
+<pre><code class="language-sh"># 生成SSH key
+echo generate ssh key
+ssh-keygen -f /root/.ssh/id_rsa -P &quot;&quot; &amp;&amp; cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
+
+# 生成 ST2 账号密码
+echo generate user
+printf &quot;%s\n&quot; &quot;${USER_NAME:?Need to set USER_NAME non-empty}&quot;
+printf &quot;%s\n&quot; &quot;${USER_PASSWORD:?Need to set USER_PASSWORD non-empty}&quot;
+echo $USER_PASSWORD | sudo htpasswd -i /etc/st2/htpasswd $USER_NAME
+
+# 生成 证书
+echo generate cert
+sudo mkdir -p /etc/ssl/st2
+sudo openssl req -x509 -newkey rsa:2048 -keyout /etc/ssl/st2/st2.key -out /etc/ssl/st2/st2.crt \
+-days 365 -nodes -subj &quot;/C=US/ST=California/L=Palo Alto/O=StackStorm/OU=Information \
+Technology/CN=$(hostname)&quot;
+
+# 检查环境变量是否完备
+printf &quot;%s\n&quot; &quot;${CONN_RMQ:?Need to set CONN_RMQ non-empty}&quot;
+printf &quot;%s\n&quot; &quot;${MONGO_HOST:?Need to set MONGO_HOST non-empty}&quot;
+printf &quot;%s\n&quot; &quot;${MONGO_DB:?Need to set MONGO_DB non-empty}&quot;
+printf &quot;%s\n&quot; &quot;${MONGO_PORT:?Need to set MONGO_PORT non-empty}&quot;
+
+# 生成st2配置文件
+cat &gt;&gt; /etc/st2/st2.conf &lt;&lt;EOF
+[system_user]
+user = root
+ssh_key_file = /root/.ssh/id_rsa
+[messaging]
+url = $CONN_RMQ
+[ssh_runner]
+remote_dir = /tmp
+[database]
+host = $MONGO_HOST
+port = $MONGO_PORT
+db_name = $MONGO_DB
+EOF
+
+# 启动supervisor
+/usr/bin/supervisord -c /etc/supervisor/supervisord.conf
+</code></pre>
+
+<h2>简单上手</h2>
+
+<h3>容器化一次性安装启动（无负担安装最快上手）</h3>
+
+<pre><code class="language-sh">docker network create stn
+docker run -itd --hostname st2-mongo  --name st2-mongo  -v /var/lib/mongo:/data/db --net=stn daocloud.io/library/mongo:3.4.3
+docker run -itd --hostname st2-etcd --name st2-etcd --net=stn index.tenxcloud.com/coreos/etcd:2.3.1 /usr/local/bin/etcd -listen-client-urls http://0.0.0.0:2379,http://0.0.0.0:4001 -advertise-client-urls http://127.0.0.1:2379,http://127.0.0.1:4001
+docker run -itd --hostname st2-rabbit --name st2-rabbit -e RABBITMQ_DEFAULT_USER=root -e RABBITMQ_DEFAULT_PASS=123456 --net=stn daocloud.io/library/rabbitmq:3.6.9
+docker run -itd --hostname st2 --name st2 --net=stn -e USER_NAME=admin -e USER_PASSWORD=123456 -e CONN_RMQ=amqp://root:123456@st2-rabbit.stn:5672/ -e MONGO_HOST=st2-mongo.stn -e MONGO_DB=st2 -e MONGO_PORT=27017 -e ETCD_ENDPOINT=http://st2-etcd.stn:2379 -p 80:80 -p 443:443 index.tenxcloud.com/philo/stackstorm:2.2.1
+</code></pre>
+
+<p><code>注意：</code> 笔者使用了daocloud和tenxcloud提供的dockerhub为大家提供服务。</p>
+
+<p><code>注意：</code> 笔者这持久化了mongodb的存储，如果不需要可删除挂载。</p>
+
+<p><code>注意：</code> ETCD用来存储全局变量。用作分布式锁。在未来使用ST2调度<code>kubernetes</code>中会介绍如何使用。</p>
+
+<h3>第一个action</h3>
+
+<p>经过之前的文档基本概念的了解，相信读者已经对系统概念有基本了解。
+Action是任务执行的最小单元。成功的学会Shell 和Python的Action和简单的WorkFlow就能够应付非常多的工作。</p>
+
+<p>第一个shell action：</p>
+
+<pre><code class="language-sh">#!/usr/bin/env bash
+
+SERVER=$1
+MESSAGE=$2
+echo ${SERVER} ${MESSAGE}
+</code></pre>
+
+<p>第一个action yaml申明</p>
+
+<pre><code class="language-yaml">---
+name: &quot;my_first_action&quot;
+runner_type: &quot;local-shell-cmd&quot;
+description: &quot;first automate&quot;
+enabled: true
+entry_point: &quot;first.sh&quot;
+parameters:
+    server:
+        type: &quot;string&quot;
+        description: &quot;server address&quot;
+        required: true
+        position: 0
+    message:
+        type: &quot;string&quot;
+        description: &quot;the information&quot;
+        required: true
+        position: 1
+</code></pre>
+
+<p><code>注意：</code> 在开始复制文档之前看清楚PACK是如何组织架构开发的。运行后在容器中查看文件夹<code>/opt/stackstorm/packs/packs</code>来学习如何开发一个pack是最直观最有效的。</p>
+
+<p>第一个workflow：</p>
+
+<p><code>注意：</code> workflow 在simple action中只能串行执行，并且只有成功失败两个路径可以走。</p>
+
+<p>有两个文件组成<code>workflow.yaml</code> 在这里开发workflow chain。</p>
+
+<p>第二个文件是 <code>xx.meta.yaml</code> 申明workflow。</p>
+
+<p>case请看参考文档5。</p>
+
+<h1>总结</h1>
+
+<p>经过查看Dockerimage是如何构建与运行的，快速在你的服务器上运行StackStorm2，到简单编写Action和workflow之后您就已经入门了StackStorm2。
+在未来的文章中我会继续更新更高级的应用方法。</p>
+
+</div>
+
+<hr>
+本人博客文章采用<a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC Attribution-NonCommercial协议</a>: CC Attribution-NonCommercial 必须保留原作者署名,并且不允许用于商业用途,其他行为都是允许的。
+<hr>
+
+<script src="https://utteranc.es/client.js"
+        repo="lijianying10/RollingBlog"
+        issue-term="StackStorm介绍与入门"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2017/04/30/IntroductionStackStorm1/" data-title="StackStorm介绍与入门" data-url="http://www.philo.top/2017/04/30/IntroductionStackStorm1/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"philotop"};
+(function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+})();
+</script>
+<!-- 多说公共JS代码 end -->
+
+<hr>
+
+                </div>
+
+                <!-- Blog Sidebar Widgets Column -->
+                <div class="col-lg-3 col-12">
+
+                    <!-- Blog Search Well -->
+                    <!--                 <div class="well">
+                        <h4>Blog Search</h4>
+                        <div class="input-group">
+                        <input type="text" class="form-control">
+                        <span class="input-group-btn">
+                        <button class="btn btn-default" type="button">
+                        <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        </span>
+                        </div> -->
+                        <!-- /.input-group -->
+                        <!-- </div> -->
+
+                        <!-- Blog Categories Well -->
+                        <div class="well">
+                            <h4>TAGS</h4>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/wiki">wiki(2)</a></br><a href="/tags/thinking">thinking(3)</a></br><a href="/tags/node">node(1)</a></br><a href="/tags/iptables">iptables(1)</a></br><a href="/tags/devenv">devenv(1)</a></br><a href="/tags/elk">elk(1)</a></br><a href="/tags/oop">oop(1)</a></br><a href="/tags/html">html(1)</a></br><a href="/tags/mesos">mesos(1)</a></br><a href="/tags/tmux">tmux(1)</a></br><a href="/tags/git">git(8)</a></br><a href="/tags/nodejs">nodejs(1)</a></br><a href="/tags/DaoCloud">DaoCloud(1)</a></br><a href="/tags/java">java(2)</a></br><a href="/tags/visualization">visualization(1)</a></br><a href="/tags/elasticsearch">elasticsearch(1)</a></br><a href="/tags/requirejs">requirejs(1)</a></br><a href="/tags/network">network(2)</a></br><a href="/tags/dns">dns(1)</a></br><a href="/tags/ss">ss(1)</a></br><a href="/tags/css">css(1)</a></br><a href="/tags/docker">docker(22)</a></br><a href="/tags/centos">centos(1)</a></br><a href="/tags/mysql">mysql(3)</a></br><a href="/tags/grub">grub(1)</a></br><a href="/tags/butterfly">butterfly(1)</a></br><a href="/tags/web">web(3)</a></br><a href="/tags/php">php(1)</a></br><a href="/tags/mongodab">mongodab(1)</a></br><a href="/tags/putty">putty(2)</a></br><a href="/tags/RHEL">RHEL(1)</a></br><a href="/tags/PXE">PXE(1)</a></br><a href="/tags/ci">ci(1)</a></br><a href="/tags/iPXE">iPXE(1)</a></br><a href="/tags/gh60">gh60(1)</a></br><a href="/tags/env">env(2)</a></br><a href="/tags/DES">DES(1)</a></br><a href="/tags/microservice">microservice(2)</a></br><a href="/tags/Ubuntu">Ubuntu(1)</a></br><a href="/tags/logstash">logstash(1)</a></br><a href="/tags/c">c(1)</a></br><a href="/tags/marathon">marathon(1)</a></br><a href="/tags/owncloud">owncloud(1)</a></br><a href="/tags/npm">npm(1)</a></br><a href="/tags/virtualbox">virtualbox(3)</a></br><a href="/tags/python">python(4)</a></br><a href="/tags/delegate">delegate(1)</a></br><a href="/tags/mac">mac(2)</a></br><a href="/tags/tray">tray(1)</a></br><a href="/tags/require.js">require.js(1)</a></br><a href="/tags/etcd">etcd(3)</a></br><a href="/tags/postgresql">postgresql(1)</a></br><a href="/tags/systemd-resolved">systemd-resolved(1)</a></br><a href="/tags/js">js(8)</a></br><a href="/tags/phpExtension">phpExtension(1)</a></br><a href="/tags/rancher">rancher(2)</a></br><a href="/tags/html5">html5(1)</a></br><a href="/tags/test">test(1)</a></br>
+                                    </ul>
+                                </div>
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/homebrew">homebrew(1)</a></br><a href="/tags/linux">linux(5)</a></br><a href="/tags/macos">macos(1)</a></br><a href="/tags/Cow">Cow(1)</a></br><a href="/tags/yaml">yaml(1)</a></br><a href="/tags/golang">golang(23)</a></br><a href="/tags/ucloud">ucloud(1)</a></br><a href="/tags/redsocks">redsocks(1)</a></br><a href="/tags/article">article(1)</a></br><a href="/tags/Docker">Docker(2)</a></br><a href="/tags/minecraft">minecraft(2)</a></br><a href="/tags/vim">vim(3)</a></br><a href="/tags/storage">storage(1)</a></br><a href="/tags/atom">atom(2)</a></br><a href="/tags/MongoDB">MongoDB(1)</a></br><a href="/tags/runc">runc(1)</a></br><a href="/tags/bootstrap">bootstrap(1)</a></br><a href="/tags/HomeBrew">HomeBrew(1)</a></br><a href="/tags/iterm2">iterm2(1)</a></br><a href="/tags/flannel">flannel(1)</a></br><a href="/tags/RunC">RunC(1)</a></br><a href="/tags/bazel">bazel(2)</a></br><a href="/tags/dev">dev(2)</a></br><a href="/tags/profiling">profiling(2)</a></br><a href="/tags/kibina">kibina(1)</a></br><a href="/tags/android">android(1)</a></br><a href="/tags/hexo">hexo(3)</a></br><a href="/tags/nginx">nginx(6)</a></br><a href="/tags/ubuntu">ubuntu(5)</a></br><a href="/tags/career">career(1)</a></br><a href="/tags/syslinux">syslinux(1)</a></br><a href="/tags/aglio">aglio(1)</a></br><a href="/tags/blog">blog(1)</a></br><a href="/tags/liteIDE">liteIDE(1)</a></br><a href="/tags/metaprogramming">metaprogramming(1)</a></br><a href="/tags/BusyBox">BusyBox(1)</a></br><a href="/tags/杂谈">杂谈(1)</a></br><a href="/tags/thrift">thrift(1)</a></br><a href="/tags/rkt">rkt(1)</a></br><a href="/tags/ssl">ssl(2)</a></br><a href="/tags/letsencrypt">letsencrypt(1)</a></br><a href="/tags/consul">consul(1)</a></br><a href="/tags/mongodb">mongodb(3)</a></br><a href="/tags/busybox">busybox(1)</a></br><a href="/tags/coreos">coreos(1)</a></br><a href="/tags/GC">GC(1)</a></br><a href="/tags/Linux">Linux(13)</a></br><a href="/tags/ShadowSocks">ShadowSocks(1)</a></br><a href="/tags/registry">registry(3)</a></br><a href="/tags/CoreOS">CoreOS(1)</a></br><a href="/tags/netplan">netplan(1)</a></br><a href="/tags/godoc">godoc(1)</a></br><a href="/tags/osx">osx(4)</a></br><a href="/tags/datatables">datatables(1)</a></br><a href="/tags/StackStorm2">StackStorm2(1)</a></br><a href="/tags/tenxcloud">tenxcloud(1)</a></br><a href="/tags/shell">shell(6)</a></br>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+
+                        <!-- Side Widget Well -->
+                        <div class="well">
+                            <h4>近期文章</h4>
+                            <a href="/2021/03/14/metaprogramming/">Metaprogramming and code generation/replace in action</a></br><a href="/2021/02/15/dockerprivateregistryen/">deploy docker registry under private network</a></br><a href="/2021/02/14/golangvimdev/">my vim golang programming environment</a></br><a href="/2021/02/06/bazelmacro/">bazel macro 的开发</a></br><a href="/2021/01/15/bazelboost/">bazel 使用经验和记录</a></br><a href="/2021/01/14/dockerprivateregistry/">小型团队内网创建docker registry</a></br><a href="/2021/01/14/ubuntudnssystemdresolved/">网关服务器部署DNS的冲突问题解决</a></br><a href="/2021/01/13/iptablesredsocksdocker/">iptables 使用 Redsocks 时候 Docker 没有网络问题的分析</a></br>
+                        </div>
+                        <div class="well">
+                            <h4>友情链接</h4>
+                            <a href="https://linux.cn/">Linux中国</a></br>
+                            <a href="http://locez.com/">LOCEZ</a></br>
+                            <a href="http://blog.ibeats.top/">CI_Knight</a>
+                        </div>
+
+                </div>
+
+            </div>
+            <!-- /.row -->
+
+            <hr>
+
+            <!-- Footer -->
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Copyright &copy; philo.top PowerBy <a href="https://github.com/lijianying10/RollingBlog">RollingBlog</a> 2020 Since 2015</p>
+                        <!-- Global site tag (gtag.js) - Google Analytics -->
+                        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173403528-1"></script>
+                        <script>
+                          window.dataLayer = window.dataLayer || [];
+                          function gtag(){dataLayer.push(arguments);}
+                          gtag('js', new Date());
+                        
+                          gtag('config', 'UA-173403528-1');
+                        </script>
+
+                    </div>
+                </div>
+                <!-- /.row -->
+            </footer>
+
+        </div>
+        <!-- /.container -->
+
+        <!-- jQuery -->
+        <script src="/js/jquery.js"></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/prism.js"></script>
+
+    </body>
+
+</html>
+

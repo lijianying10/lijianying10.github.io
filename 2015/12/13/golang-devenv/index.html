@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>golang 环境配置建议</title>
+        <link href="/css/prism.css" rel="stylesheet">
+        <link href="/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/css/blog-post.css" rel="stylesheet">
+        <link href="/css/typo.css" rel="stylesheet">
+        <link rel="shortcut icon" href="/favicon.ico" />
+    </head>
+
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Philo</a>
+                </div>
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/">HOME</a>
+                        </li>
+                        <li>
+                            <a href="/archive/">Archive</a>
+                        </li>
+                        <li>
+                            <a href="/2015/02/21/index/index.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container -->
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container" style="
+                margin-top: 70px;
+                ">
+
+            <div class="row">
+
+                <!-- Blog Post Content Column -->
+                <div class="col-lg-9 col-12">
+
+                    <!-- Blog Post -->
+
+<!-- Title -->
+<h1><a href="/2015/12/13/golang-devenv/">golang 环境配置建议</a></h1>
+ 
+<!-- Author -->
+<p class="lead">
+Tags
+
+<a href="/tags/golang">golang</a>
+
+<a href="/tags/dev">dev</a>
+
+<a href="/tags/env">env</a>
+
+<a href="/tags/vim">vim</a>
+
+<a href="/tags/docker">docker</a>
+
+</p>
+
+<hr>
+
+<!-- Date/Time -->
+<p><span class="glyphicon glyphicon-time"></span> 2015-12-13 11:35:20</p>
+
+<hr>
+
+<div class="typo">
+<h2>VERSION:1.3</h2>
+
+<p><img src="http://golang.org/doc/gopher/project.png" alt="" /></p>
+
+<h2>摘要</h2>
+
+<p><a href="/2015/02/06/golang-环境配置建议/">在之前的实践中</a>满足开发环境所有特征的情况下进行了大量方式上的升级。</p>
+
+<p>经过<code>8</code>次的版本升级，调整，爬坑，终于觉得这次版本升级足够有意义替代之前版本的建议。</p>
+
+<p>我总觉得花一少部分的时间调整开发工具让自己的工作效率更高是非常值得的。</p>
+
+<p>本次祭出大招<code>Docker</code>来作为项目开发的主要脚手架。</p>
+
+<p>并且我现在认为一个好的开发工具应该满足：</p>
+
+<ol>
+<li>项目管理</li>
+<li>快速文件跳转</li>
+<li>自动语法检查</li>
+<li>自动补全</li>
+<li>查找定义</li>
+<li>启动速度快</li>
+<li>如果自己有需求的话插件可以随便写</li>
+<li>灵活的运行配置</li>
+</ol>
+
+<p>但是根据10个月的开发实践，除了上面这些之外还需要兼顾：</p>
+
+<ol>
+<li>国内的网络环境</li>
+<li>升级方便</li>
+<li>随时随地快速部署自己的开发环境</li>
+<li>能在线上服务器进行开发，随时随地升级版本修改代码。</li>
+</ol>
+
+<h2>Docker Registry</h2>
+
+<p><code>docker pull index.tenxcloud.com/philo/golangdev:1.3</code></p>
+
+<p><code>docker pull lijianying10/golangdev:1.3</code></p>
+
+<p>如果你还不会docker请参考<a href="/2015/04/01/docker-super-start/">这里</a></p>
+
+<h2>Dockerfile</h2>
+
+<p><a href="https://github.com/lijianying10/FixLinux/blob/master/golangdev/Dockerfile">点击这里查看Dockerfile</a></p>
+
+<h2>升级日志</h2>
+
+<h3>1.2.1</h3>
+
+<pre><code>修复vim下escape有时间延迟（解决方法见.vimrc最后一行）
+Ctrl+s保存的时候添加代码格式检查（其实就是追加命令 :GoMetaLinter）
+更新golang到1.5.2 based on Debian 8
+</code></pre>
+
+<h3>1.3 (2016年04月04日)</h3>
+
+<ol>
+<li>环境升级：<code>debian 8</code>, <code>golang 1.6</code></li>
+<li>VIM插件升级 : powerline-&gt; airline 修复字体问题</li>
+<li>修复VIM+TMUX背景颜色不一致的问题。</li>
+<li>BASHRC添加了手动下载最新环境变量的alias</li>
+</ol>
+
+<p>注意：如果您想解决乱码问题需要下载<a href="https://github.com/powerline/fonts">PowerLine字体</a>设置Term软件到这里面的字体就可以了。常用的编程字体里面都有
+如果您不想用PowerLine字体请注释掉：<code>let g:airline_powerline_fonts = 1</code> 此行代码位置在<code>~/.vimrc</code></p>
+
+<p><img src="http://7viiaq.com1.z0.glb.clouddn.com/12.pic_hd.jpg" alt="" /></p>
+
+<h2>特征解释</h2>
+
+<h3>兼顾国内网络情况</h3>
+
+<ol>
+<li>使用Dockerfile从国外VPS构建，然后推送到时速云备用。这种构建方式适合调试。</li>
+<li><code>推荐！</code>如果您在国外没有VPS推荐使用时速云TCE来构建，从香港节点自动化构建随时能看到日志。<a href="http://doc.tenxcloud.com/doc/v1/ci/client-download.html">参考文档</a></li>
+</ol>
+
+<h3>升级方便</h3>
+
+<ol>
+<li>直接修改Dockerfile完成升级，调整From就可以调整底层系统使用。</li>
+<li>可根据您的需要随时定制自己的版本。非常方便。</li>
+</ol>
+
+<h3>随时能够快速部署</h3>
+
+<ol>
+<li>Docker启动速度非常快。</li>
+<li>如果您没有Image在内网该Image也只有1GB大小可非常快速的传输到您的电脑。</li>
+<li>国内准备好了加速源，详细查看Docker Registry部分。时速云确实挺快的。</li>
+<li>如果您的工作站安装的是CoreOS or Rancher这种的Docker Linux 不但安装快，部署开发环境也是一瞬间完成。</li>
+</ol>
+
+<h3>能够在线上服务器进行线上代码调整</h3>
+
+<ol>
+<li>只要部署到线上服务器直接就可以使用。</li>
+<li>老板再也不用担心我的集成新功能速度太慢了。</li>
+</ol>
+
+<h2>使用方法</h2>
+
+<h3>文件跳转(<a href="https://wincent.com/products/command-t">Command-T</a>)</h3>
+
+<p>快捷键： <code>&lt;leader&gt;t</code></p>
+
+<p>注意：<code>&lt;leader&gt;</code>在我的vim配置里面是反斜杠,插件快捷键参考官方文档。</p>
+
+<p><img src="http://7viiaq.com1.z0.glb.clouddn.com/QQ20151213-0@2x.png" alt="" /></p>
+
+<h3>文件管理(NERD_tree)</h3>
+
+<p>快捷键： <code>M-u</code>。</p>
+
+<p>注意： 插件快捷键参考官方文档。</p>
+
+<p><img src="http://7viiaq.com1.z0.glb.clouddn.com/QQ20151213-1@2x.png" alt="" /></p>
+
+<h3>自动语法检查</h3>
+
+<p>触发： 每次保存文件。</p>
+
+<p>命令： <code>:GoMetaLinter, which invokes all possible linters (golint, vet, errcheck, deadcode, etc..) and shows the warnings/errors</code></p>
+
+<p><img src="http://7viiaq.com1.z0.glb.clouddn.com/QQ20151213-2@2x.png" alt="" /></p>
+
+<p>例子中：Struct默认要求有注释，不然就会报警。对于常用的拼写比如说ID有严格的检查需要符合大众的拼写习惯。</p>
+
+<p>其他正确性检查这里不再赘述。</p>
+
+<h3>自动补全</h3>
+
+<p><img src="http://7viiaq.com1.z0.glb.clouddn.com/QQ20151213-3@2x.png" alt="" /></p>
+
+<p>注意：在最上面会显示API文档,想关闭文档快捷键：<code>M-c</code> 。</p>
+
+<h3>查找定义位置</h3>
+
+<p>快捷键：<code>M-n</code>。</p>
+
+<h3>Outline 快速跳转(Tagbar)</h3>
+
+<p>快捷键：<code>M-p</code>。</p>
+
+<p><img src="http://7viiaq.com1.z0.glb.clouddn.com/QQ20151213-4@2x.png" alt="" /></p>
+
+<h3>快速关闭文件</h3>
+
+<p>快捷键：<code>C-c</code>。</p>
+
+<h3>文件标签切换</h3>
+
+<p>快捷键： <code>M-i</code> 切换到上一个。
+快捷键： <code>M-o</code> 切换到下一个。</p>
+
+<h3>保存文件</h3>
+
+<p>快捷键 <code>C-s</code>。</p>
+
+<p>注意： Stop tty已经被我关闭，不必担心tty被锁。</p>
+
+<h2>总结</h2>
+
+<p>在上面我总结的全部都是我加的快捷键用起来比较舒服的。如果您需要自己修改快捷键请fork<a href="https://github.com/lijianying10/FixLinux/blob/master/dotfile/.vimrc">我的github REPO</a>。</p>
+
+<p>如果您有任何改进意见请回复留言给我发Email。先谢过。</p>
+
+<p>vim还有很多默认的快捷键这里就不再多说，最好的学习方法是想到自己有什么习惯或者需要快捷键支持去google找找。</p>
+
+</div>
+
+<hr>
+本人博客文章采用<a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC Attribution-NonCommercial协议</a>: CC Attribution-NonCommercial 必须保留原作者署名,并且不允许用于商业用途,其他行为都是允许的。
+<hr>
+
+<script src="https://utteranc.es/client.js"
+        repo="lijianying10/RollingBlog"
+        issue-term="golang 环境配置建议"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2015/12/13/golang-devenv/" data-title="golang 环境配置建议" data-url="http://www.philo.top/2015/12/13/golang-devenv/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"philotop"};
+(function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+})();
+</script>
+<!-- 多说公共JS代码 end -->
+
+<hr>
+
+                </div>
+
+                <!-- Blog Sidebar Widgets Column -->
+                <div class="col-lg-3 col-12">
+
+                    <!-- Blog Search Well -->
+                    <!--                 <div class="well">
+                        <h4>Blog Search</h4>
+                        <div class="input-group">
+                        <input type="text" class="form-control">
+                        <span class="input-group-btn">
+                        <button class="btn btn-default" type="button">
+                        <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        </span>
+                        </div> -->
+                        <!-- /.input-group -->
+                        <!-- </div> -->
+
+                        <!-- Blog Categories Well -->
+                        <div class="well">
+                            <h4>TAGS</h4>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/wiki">wiki(2)</a></br><a href="/tags/thinking">thinking(3)</a></br><a href="/tags/node">node(1)</a></br><a href="/tags/iptables">iptables(1)</a></br><a href="/tags/devenv">devenv(1)</a></br><a href="/tags/elk">elk(1)</a></br><a href="/tags/oop">oop(1)</a></br><a href="/tags/html">html(1)</a></br><a href="/tags/mesos">mesos(1)</a></br><a href="/tags/tmux">tmux(1)</a></br><a href="/tags/git">git(8)</a></br><a href="/tags/nodejs">nodejs(1)</a></br><a href="/tags/DaoCloud">DaoCloud(1)</a></br><a href="/tags/java">java(2)</a></br><a href="/tags/visualization">visualization(1)</a></br><a href="/tags/elasticsearch">elasticsearch(1)</a></br><a href="/tags/requirejs">requirejs(1)</a></br><a href="/tags/network">network(2)</a></br><a href="/tags/dns">dns(1)</a></br><a href="/tags/ss">ss(1)</a></br><a href="/tags/css">css(1)</a></br><a href="/tags/docker">docker(22)</a></br><a href="/tags/centos">centos(1)</a></br><a href="/tags/mysql">mysql(3)</a></br><a href="/tags/grub">grub(1)</a></br><a href="/tags/butterfly">butterfly(1)</a></br><a href="/tags/web">web(3)</a></br><a href="/tags/php">php(1)</a></br><a href="/tags/mongodab">mongodab(1)</a></br><a href="/tags/putty">putty(2)</a></br><a href="/tags/RHEL">RHEL(1)</a></br><a href="/tags/PXE">PXE(1)</a></br><a href="/tags/ci">ci(1)</a></br><a href="/tags/iPXE">iPXE(1)</a></br><a href="/tags/gh60">gh60(1)</a></br><a href="/tags/env">env(2)</a></br><a href="/tags/DES">DES(1)</a></br><a href="/tags/microservice">microservice(2)</a></br><a href="/tags/Ubuntu">Ubuntu(1)</a></br><a href="/tags/logstash">logstash(1)</a></br><a href="/tags/c">c(1)</a></br><a href="/tags/marathon">marathon(1)</a></br><a href="/tags/owncloud">owncloud(1)</a></br><a href="/tags/npm">npm(1)</a></br><a href="/tags/virtualbox">virtualbox(3)</a></br><a href="/tags/python">python(4)</a></br><a href="/tags/delegate">delegate(1)</a></br><a href="/tags/mac">mac(2)</a></br><a href="/tags/tray">tray(1)</a></br><a href="/tags/require.js">require.js(1)</a></br><a href="/tags/etcd">etcd(3)</a></br><a href="/tags/postgresql">postgresql(1)</a></br><a href="/tags/systemd-resolved">systemd-resolved(1)</a></br><a href="/tags/js">js(8)</a></br><a href="/tags/phpExtension">phpExtension(1)</a></br><a href="/tags/rancher">rancher(2)</a></br><a href="/tags/html5">html5(1)</a></br><a href="/tags/test">test(1)</a></br>
+                                    </ul>
+                                </div>
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/homebrew">homebrew(1)</a></br><a href="/tags/linux">linux(5)</a></br><a href="/tags/macos">macos(1)</a></br><a href="/tags/Cow">Cow(1)</a></br><a href="/tags/yaml">yaml(1)</a></br><a href="/tags/golang">golang(23)</a></br><a href="/tags/ucloud">ucloud(1)</a></br><a href="/tags/redsocks">redsocks(1)</a></br><a href="/tags/article">article(1)</a></br><a href="/tags/Docker">Docker(2)</a></br><a href="/tags/minecraft">minecraft(2)</a></br><a href="/tags/vim">vim(3)</a></br><a href="/tags/storage">storage(1)</a></br><a href="/tags/atom">atom(2)</a></br><a href="/tags/MongoDB">MongoDB(1)</a></br><a href="/tags/runc">runc(1)</a></br><a href="/tags/bootstrap">bootstrap(1)</a></br><a href="/tags/HomeBrew">HomeBrew(1)</a></br><a href="/tags/iterm2">iterm2(1)</a></br><a href="/tags/flannel">flannel(1)</a></br><a href="/tags/RunC">RunC(1)</a></br><a href="/tags/bazel">bazel(2)</a></br><a href="/tags/dev">dev(2)</a></br><a href="/tags/profiling">profiling(2)</a></br><a href="/tags/kibina">kibina(1)</a></br><a href="/tags/android">android(1)</a></br><a href="/tags/hexo">hexo(3)</a></br><a href="/tags/nginx">nginx(6)</a></br><a href="/tags/ubuntu">ubuntu(5)</a></br><a href="/tags/career">career(1)</a></br><a href="/tags/syslinux">syslinux(1)</a></br><a href="/tags/aglio">aglio(1)</a></br><a href="/tags/blog">blog(1)</a></br><a href="/tags/liteIDE">liteIDE(1)</a></br><a href="/tags/metaprogramming">metaprogramming(1)</a></br><a href="/tags/BusyBox">BusyBox(1)</a></br><a href="/tags/杂谈">杂谈(1)</a></br><a href="/tags/thrift">thrift(1)</a></br><a href="/tags/rkt">rkt(1)</a></br><a href="/tags/ssl">ssl(2)</a></br><a href="/tags/letsencrypt">letsencrypt(1)</a></br><a href="/tags/consul">consul(1)</a></br><a href="/tags/mongodb">mongodb(3)</a></br><a href="/tags/busybox">busybox(1)</a></br><a href="/tags/coreos">coreos(1)</a></br><a href="/tags/GC">GC(1)</a></br><a href="/tags/Linux">Linux(13)</a></br><a href="/tags/ShadowSocks">ShadowSocks(1)</a></br><a href="/tags/registry">registry(3)</a></br><a href="/tags/CoreOS">CoreOS(1)</a></br><a href="/tags/netplan">netplan(1)</a></br><a href="/tags/godoc">godoc(1)</a></br><a href="/tags/osx">osx(4)</a></br><a href="/tags/datatables">datatables(1)</a></br><a href="/tags/StackStorm2">StackStorm2(1)</a></br><a href="/tags/tenxcloud">tenxcloud(1)</a></br><a href="/tags/shell">shell(6)</a></br>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+
+                        <!-- Side Widget Well -->
+                        <div class="well">
+                            <h4>近期文章</h4>
+                            <a href="/2021/03/14/metaprogramming/">Metaprogramming and code generation/replace in action</a></br><a href="/2021/02/15/dockerprivateregistryen/">deploy docker registry under private network</a></br><a href="/2021/02/14/golangvimdev/">my vim golang programming environment</a></br><a href="/2021/02/06/bazelmacro/">bazel macro 的开发</a></br><a href="/2021/01/15/bazelboost/">bazel 使用经验和记录</a></br><a href="/2021/01/14/dockerprivateregistry/">小型团队内网创建docker registry</a></br><a href="/2021/01/14/ubuntudnssystemdresolved/">网关服务器部署DNS的冲突问题解决</a></br><a href="/2021/01/13/iptablesredsocksdocker/">iptables 使用 Redsocks 时候 Docker 没有网络问题的分析</a></br>
+                        </div>
+                        <div class="well">
+                            <h4>友情链接</h4>
+                            <a href="https://linux.cn/">Linux中国</a></br>
+                            <a href="http://locez.com/">LOCEZ</a></br>
+                            <a href="http://blog.ibeats.top/">CI_Knight</a>
+                        </div>
+
+                </div>
+
+            </div>
+            <!-- /.row -->
+
+            <hr>
+
+            <!-- Footer -->
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Copyright &copy; philo.top PowerBy <a href="https://github.com/lijianying10/RollingBlog">RollingBlog</a> 2020 Since 2015</p>
+                        <!-- Global site tag (gtag.js) - Google Analytics -->
+                        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173403528-1"></script>
+                        <script>
+                          window.dataLayer = window.dataLayer || [];
+                          function gtag(){dataLayer.push(arguments);}
+                          gtag('js', new Date());
+                        
+                          gtag('config', 'UA-173403528-1');
+                        </script>
+
+                    </div>
+                </div>
+                <!-- /.row -->
+            </footer>
+
+        </div>
+        <!-- /.container -->
+
+        <!-- jQuery -->
+        <script src="/js/jquery.js"></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/prism.js"></script>
+
+    </body>
+
+</html>
+

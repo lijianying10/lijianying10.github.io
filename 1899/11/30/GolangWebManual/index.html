@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>使用Golang快速构建WEB应用</title>
+        <link href="/css/prism.css" rel="stylesheet">
+        <link href="/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/css/blog-post.css" rel="stylesheet">
+        <link href="/css/typo.css" rel="stylesheet">
+        <link rel="shortcut icon" href="/favicon.ico" />
+    </head>
+
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Philo</a>
+                </div>
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/">HOME</a>
+                        </li>
+                        <li>
+                            <a href="/archive/">Archive</a>
+                        </li>
+                        <li>
+                            <a href="/2015/02/21/index/index.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container -->
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container" style="
+                margin-top: 70px;
+                ">
+
+            <div class="row">
+
+                <!-- Blog Post Content Column -->
+                <div class="col-lg-9 col-12">
+
+                    <!-- Blog Post -->
+
+<!-- Title -->
+<h1><a href="/1899/11/30/GolangWebManual/">使用Golang快速构建WEB应用</a></h1>
+ 
+<!-- Author -->
+<p class="lead">
+Tags
+
+<a href="/tags/golang">golang</a>
+
+<a href="/tags/web">web</a>
+
+<a href="/tags/oop">oop</a>
+
+<a href="/tags/js">js</a>
+
+<a href="/tags/requirejs">requirejs</a>
+
+<a href="/tags/mongodb">mongodb</a>
+
+</p>
+
+<hr>
+
+<!-- Date/Time -->
+<p><span class="glyphicon glyphicon-time"></span> 1899-11-30 00:00:00</p>
+
+<hr>
+
+<div class="typo">
+<h2>AUTH:<a href="http://philo.top/about">PHILO</a> VERSION 2</h2>
+
+<p>我们从来都不开发代码，我们只是代码的搬运工。
+<strong>&ndash; 阿飞</strong></p>
+
+<p>希望大家都变卡卡西。 <strong>&ndash;啊贱</strong></p>
+
+<p>大家copy愉快，文档只做参考。如果发现问题或者有好的建议请回复我我回及时更正。</p>
+
+<h2>1.Abstract</h2>
+
+<p>在学习web开发的过程中会遇到很多困难，因此写洗一篇类似综述类的文章。作为路线图从web开发要素的index出发来介绍golang开发的学习流程以及Example代码。
+在描述中多是使用代码来描述使用方法不会做过多的说明。最后可以方便的copy代码来实现自己的需求。</p>
+
+<p>本文适应对象：
+1. 对web开发有一定经验的人
+2. 能够灵活使用ajax的人（至少懂得前后分离）
+3. golang web 开发有一定了解，至少略读过一些golang web开发的书籍</p>
+
+<p>看完本文之后您会收获：
+1. golang web开发的一些技巧
+2. golang web开发的一些实用API</p>
+
+<p>本文在描述的时候为了解释尽量详细，已经把解释写到代码注释中。</p>
+
+<h2>2.golang web 开发check list</h2>
+
+<blockquote>
+<p>略过的部分：基本流程控制，OOP等基础语法知识。</p>
+</blockquote>
+
+<h3>2.1本章节提供golang web开发的知识面参考。</h3>
+
+<ul>
+<li><a href="#1-Abstract">1.Abstract</a></li>
+<li><a href="#2-golang_web_开发check_list">2.golang web 开发check list</a>
+
+<ul>
+<li><a href="#2-1本章节提供golang_web开发的知识面参考。">2.1 本章节提供golang_web开发的知识面参考。</a></li>
+</ul></li>
+<li><a href="#3-路由器">3.路由器</a>
+
+<ul>
+<li><a href="#3-1手动路由">3.1 手动路由</a></li>
+<li><a href="#3-2_手动路由的绑定">3.2 手动路由的绑定</a>
+
+<ul>
+<li><a href="#3-2-1_静态文件">3.2.1 静态文件</a></li>
+<li><a href="#3-2-2_固定函数">3.2.2 固定函数与资源获取</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#4-页面加载">4.页面加载</a>
+
+<ul>
+<li><a href="#4-1_纯静态页（HTML）">4.1 纯静态页（HTML）</a></li>
+<li><a href="#4-2_模板页面的加载">4.2 模板页面的加载</a></li>
+</ul></li>
+<li><a href="#5-表示层脚本">5.表示层脚本</a>
+
+<ul>
+<li><a href="#5-1_require-js">5.1 require.js</a>
+
+<ul>
+<li><a href="#5-1-1_加载">5.1.1 加载</a></li>
+<li><a href="#5-1-2_页面Business">5.1.2 页面Business</a></li>
+</ul></li>
+<li><a href="#5-2_JQuery">5.2 JQuery</a></li>
+</ul></li>
+<li><a href="#6-业务层">6.业务层</a></li>
+<li><a href="#7-持久层">7.持久层</a>
+
+<ul>
+<li><a href="#7-1_Mysql">7.1 Mysql</a></li>
+<li><a href="#7-2_Mongodb">7.2 Mongodb</a></li>
+</ul></li>
+<li><a href="#8-单元测试注意事项">8.单元测试注意事项</a></li>
+<li><a href="#9-LOG">9.LOG</a></li>
+<li><a href="#总结">总结</a></li>
+</ul>
+
+<h2>3.路由器</h2>
+
+<blockquote>
+<p>路由器是整个网站对外的灵魂，如果路由做的不好URL会非常恶心。
+所以这部分设计成第一个要说的内容。</p>
+
+<p>路由分两种一种是手动路由为了通过tul调度固定的功能，另外一点就是资源
+的获取，通过url的分析来模仿静态页的方式来获取资源（类似get）</p>
+
+<p>自动路由，主要使用OOP的COMMAND模式来实现。所有功能使用post，
+统一入口，方便权限管理，安全管理，跨域管理。但是如此强大的功能还是
+交给框架来做吧。这里就不给新手做参考了。</p>
+</blockquote>
+
+<h3>3.1手动路由</h3>
+
+<pre><code class="language-go">package main
+
+import (
+  &quot;log&quot;
+  &quot;net/http&quot;
+  )
+
+  func main() {
+    RouterBinding() // 路由绑定函数
+    err := http.ListenAndServe(&quot;:9090&quot;, nil) //设置监听的端口
+    if err != nil {
+      log.Fatal(&quot;ListenAndServe: &quot;, err)
+    }
+  }
+
+</code></pre>
+
+<p>在httpserver运行之前先绑定路由</p>
+
+<h3>3.2 手动路由的绑定</h3>
+
+<h4>3.2.1 静态文件</h4>
+
+<pre><code class="language-go">http.Handle(&quot;/pages/&quot;, http.StripPrefix(&quot;/pages/&quot;, http.FileServer(http.Dir(&quot;./pages&quot;))))
+</code></pre>
+
+<h4>3.2.2 固定函数与资源获取</h4>
+
+<p>他们都是一样的</p>
+
+<pre><code class="language-go">  http.HandleFunc(&quot;/images/&quot;, fileUpload.DownloadPictureAction)
+</code></pre>
+
+<h2>4.页面加载</h2>
+
+<h3>4.1 纯静态页（HTML）</h3>
+
+<blockquote>
+<p>直接交给路由就行了。自动就访问那个文件夹了。不过生产环境果然还得是cdn，如果自己服务器比较多。可以nginx反向代理。
+主要好处前后分离，能上CDN就是通讯次数多了。不过通过优化改善之类的都还ok啦。</p>
+</blockquote>
+
+<h3>4.2 模板页面的加载</h3>
+
+<pre><code class="language-go">commonPage, err := template.ParseFiles(&quot;pages/common/head.gtpl&quot;, //加载模板
+&quot;pages/common/navbar.gtpl&quot;, &quot;pages/common/tail.gtpl&quot;)
+if err != nil {
+  panic(err.Error())
+}
+navArgs := map[string]string{&quot;Home&quot;: &quot;home&quot;, &quot;User&quot;: &quot;yupengfei&quot;}//复杂的参数开始往里塞
+
+knowledgePage, err := template.ParseFiles(&quot;pages/knowledge/knowledge.gtpl&quot;)
+knowledgeArgs := map[string]interface{}{&quot;Head&quot;: &quot;This is a test title&quot;,
+&quot;Author&quot;: &quot;kun.wang&quot;, &quot;PublishDatetime&quot;: &quot;2014-09-14&quot;,
+&quot;Content&quot;: template.HTML(&quot;&lt;p style=\&quot;text-indent: 2em\&quot;&gt;为什么要用语义呢？&lt;/p&gt;&quot;)}//不是不好，只是做字符串分析会影响工程效率
+commonPage.ExecuteTemplate(w, &quot;header&quot;, nil)// render 开始
+commonPage.ExecuteTemplate(w, &quot;navbar&quot;, navArgs)
+knowledgePage.ExecuteTemplate(w, &quot;knowledge&quot;, knowledgeArgs)
+commonPage.ExecuteTemplate(w, &quot;tail&quot;, nil)
+</code></pre>
+
+<p>仅提供关键代码。
+ &gt; 1. 其他的都还挺好，就是页面渲染用服务器是不是有点太奢侈了。
+ &gt; 2. 字符串数组作为输入参数差错比较困难
+ &gt; 3. 总结：虽然减少的通讯次数，但是没办法上CDN蛋疼，另外，模板的mapping蛋疼。</p>
+
+<h2>5.表示层脚本</h2>
+
+<p>表示层脚本做的比较困难也不是很好学。
+但是一旦搞定了，代码的复用性会有非常可观的提升。
+&gt;就普通情况而言JS开发效率是非常高的灵活度高，并且使用的是客户端的cpu
+性能好，免费资源多，学习的人也多，好招聘。</p>
+
+<h3>5.1 require.js</h3>
+
+<h4>5.1.1 加载</h4>
+
+<pre><code class="language-js">  &lt;script data-main=&quot;/reqmod/login_main&quot; language=&quot;JavaScript&quot; defer async=&quot;true&quot; src=&quot;js/r.js&quot;&gt;&lt;/script&gt;
+</code></pre>
+
+<p>整个网页之留这么一个加载脚本的入口（每个页面最好只有一个js文件）</p>
+
+<p>好处</p>
+
+<pre><code>  js是延迟加载。不会出现网页卡死的情况
+  最大化使用缓存。（HTTP 304）
+  一个网页只用一个js
+  dom事件绑定，不用在html控件上写js绑定了
+</code></pre>
+
+<p>坏处</p>
+
+<pre><code>  学习比较难
+  网站更新始终有缓存没更新的浏览器。造成错误（所以有些情况客户自己就知道多刷新几次了，已经成用户习惯了）
+</code></pre>
+
+<p>参数解释</p>
+
+<pre><code>  `data-main` 业务逻辑入口，载入当前字符串.js这个文件
+  `language` 不解释
+  `defer async` 字面意思
+  `src` r.js就是require.js的意思。代码到处都能搞到。
+</code></pre>
+
+<h4>5.1.2 页面Business</h4>
+
+<p>加载依赖文件</p>
+
+<pre><code class="language-js">  require.baseUrl = &quot;/&quot;
+  require.config({
+    baseUrl: require.baseUrl,
+    paths: {
+      &quot;jquery&quot;: &quot;js/jquery-1.10.2.min&quot;,
+      &quot;domready&quot; : &quot;reqmod/domReady&quot;,
+      &quot;pm&quot; : &quot;reqmod/pmodal&quot;,
+      &quot;cookie&quot;:&quot;reqmod/cookie&quot;,
+      &quot;user&quot;:&quot;reqmod/user&quot;,
+      &quot;bootstrap&quot;: &quot;reqmod/bootstrap.min&quot;,
+      &quot;nav&quot;:&quot;reqmod/nav&quot;
+    },
+    shim: {
+      'bootstrap': {
+        deps: ['jquery']
+      }
+    }
+  });
+  //直接copy全搞定。
+</code></pre>
+
+<p>执行页面business</p>
+
+<blockquote>
+<p>执行里面做的最多的就是dom跟事件绑定而已。加载各种js库直接引用。
+代码美观，开发效率，执行效率都是非常棒的。</p>
+</blockquote>
+
+<pre><code>```js
+require(['nav','domready', 'jquery', 'user','pm'], function (nav,doc, $, user,pm){
+  //这个函数的第一个`数组`参数是选择的依赖的模块。1. 网站绝对路径。 2. 使用加载依赖模块的时候选择export的内容
+  //数组的顺序要跟function顺序一致，如果有两个模块依赖比如说jquery插件，就写道最后不用变量，直接使用`$`
+  doc(function () { // domReady
+    pm.load();//加载各种插件HTML模板之类的都ok
+    $('#btn_login')[0].onclick = function(){user.login();}//button 事件绑定
+  });
+});
+```
+</code></pre>
+
+<p>页面MODEL
+    ```js
+    define([&lsquo;jquery&rsquo;,&lsquo;reqmod/cookie&rsquo;,&lsquo;user&rsquo;,&lsquo;bootstrap&rsquo;],function ($,cookie,user){
+        //define 函数的参数内容require是一样的。
+        // 这里依赖的模块要在调用此模块中的模块中有path配置。不然会死的很惨，报错的时候不会说缺少什么什么地方错了。
+      var nav_load = function () { // 注意函数定义的方式copy就行
+        $.get(&lsquo;/nav.html&rsquo;, function(result){
+          var newNode = document.createElement(&ldquo;div&rdquo;);
+          newNode.innerHTML = result;
+          $(&lsquo;body&rsquo;)[0].insertBefore(newNode,$(&lsquo;body&rsquo;)[0].firstChild);
+          //document.body.innerHTML = result + document.body.innerHTML;
+          $(&lsquo;#btn_login&rsquo;)[0].onclick = function(){user.login();}
+          $(&lsquo;#btn_reg&rsquo;)[0].onclick = function(){window.location=&lsquo;/register.html&rsquo;}
+          $.post(&lsquo;/login_check&rsquo;,{},function(data){
+            if(data==0){
+              Form_login.style.display=&ldquo;&rdquo;
+            }
+            else{
+              form_userInfo.style.display=&ldquo;&rdquo;
+            }
+          })
+        });</p>
+
+<pre><code>  }
+
+  return {//这里类似微型路由。非常灵活，非常方便
+    load :nav_load
+  };
+});
+```
+</code></pre>
+
+<h3>5.2 JQuery</h3>
+
+<blockquote>
+<p>JQ的功能只要require.js引用了之后基本上都是一样的。
+如果有需要可以到w3school上学习一下。</p>
+</blockquote>
+
+<h2>6.业务层</h2>
+
+<p>Post分析
+    <code>go
+    func XXXAction(w http.ResponseWriter, r *http.Request) {
+      r.parseForm() //有这个才能获取参数
+      r.Form[&quot;Email&quot;] // 获取Email 参数（String）
+      // 写接下来的业务。
+    }
+</code></p>
+
+<p>资源入口函数资源require分析（url分析固定写法）
+    <code>go
+    func Foo(w http.ResponseWriter, r *http.Request) {
+      queryFile := strings.Split(r.URL.Path, &quot;/&quot;)
+      queryResource := queryFile[len(queryFile)-1] // 解析文件
+    }
+    //完成字符串分割之后，按照需求来获取资源就可以了。
+</code></p>
+
+<p>直接输入object</p>
+
+<pre><code class="language-go">data, err := ioutil.ReadAll(r.Body) //直接读取form为 json 字符串
+	if err != nil {
+		utility.SimpleFeedBack(w, 10, &quot;failed to read body&quot;)
+		pillarsLog.PillarsLogger.Print(&quot;failed to read body&quot;)
+		return
+	}
+	k := 【BUSINESS OBJECT】
+	err = json.Unmarshal(data, &amp;k)
+	if err != nil {
+		utility.SimpleFeedBack(w, 13, &quot;Pramaters failed!&quot;)
+		pillarsLog.PillarsLogger.Print(&quot;Pramaters failed!&quot;)
+		return
+	}
+//方便快捷。再访问参数的时候，直接调用结构体参数就可以了。
+//注意ajax调用函数的时候需要做出一些调整代码如下：
+</code></pre>
+
+<pre><code class="language-js">$.ajax([dist],JSON.stringify([data]),function(){},'json');//注意JSON
+</code></pre>
+
+<h2>7.持久层</h2>
+
+<h3>7.1 Mysql</h3>
+
+<blockquote>
+<p>其实不管什么语言的Mysql驱动都是从PRO*C来的，所以会PRO*\C之后，啥都好说</p>
+</blockquote>
+
+<p>Insert Delete Update
+    <code>go
+    stmt, err := mysqlUtility.DBConn.Prepare(&quot;INSERT INTO credit (credit_code, user_code, credit_rank) VALUES (?, ?, ?)&quot;)
+    if err != nil {
+      pillarsLog.PillarsLogger.Print(err.Error())
+      return false, err
+    }
+    defer stmt.Close()
+    _, err = stmt.Exec(credit.CreditCode, credit.UserCode, credit.CreditRank)
+    if err  != nil {
+      return false, err
+      } else {
+        return true, err
+      }
+      //还是比较方便的
+</code></p>
+
+<p>Query
+    <code>go
+    stmt, err := mysqlUtility.DBConn.Prepare(`SELECT commodity_code, commodity_name, description, picture,
+      price, storage, count, status,
+      insert_datetime, update_datetime FROM commodity WHERE commodity_code = ?`)
+      if err != nil {
+        return nil, err
+      }
+      defer stmt.Close()
+      result, err := stmt.Query(commodityCode)
+      if err != nil {
+        return nil, err
+      }
+      defer result.Close()
+      var commodity utility.Commodity
+      if result.Next() {
+        err = result.Scan(&amp;(commodity.CommodityCode), &amp;(commodity.CommodityName), &amp;(commodity.Description),
+        &amp;(commodity.Picture), &amp;(commodity.Price), &amp;(commodity.Storage), &amp;(commodity.Count), &amp;(commodity.Status),
+        &amp;(commodity.InsertDatetime), &amp;(commodity.UpdateDatetime))
+        if err != nil {
+          pillarsLog.PillarsLogger.Print(err.Error())
+          return nil, err
+        }
+      }
+      return &amp;commodity, err
+</code></p>
+
+<h3>7.2 Mongodb</h3>
+
+<pre><code class="language-go">  err := 	mongoUtility.PictureCollection.Find(bson.M{&quot;picturecode&quot;:*pictureCode}).One(&amp;picture)
+</code></pre>
+
+<p>这里只给出最简单的例子。具体的看mgo的开发文档就ok。还是比较简单的。</p>
+
+<h2>8.单元测试注意事项</h2>
+
+<ol>
+<li>测试命令 go test -v （没有其他参数了！！！） <code>如果不带-v只显示结果，不显示调试过程，主要是调试开发的时候用</code></li>
+<li>文件格式 xxx_test.go 但是建议改成 xxx_test0.go 或者喜欢改成别的也可以。
+
+<ol>
+<li>由于测试先行的原则，在开发的时候一次测试也就一两个函数。</li>
+<li>这样相当于把其他测试注释掉</li>
+</ol></li>
+<li>测试的时候的配置文件要放到测试目录下面。别忘了。</li>
+<li>心态，错误太多一个一个来，要有个好心态。</li>
+</ol>
+
+<h2>9.LOG</h2>
+
+<ol>
+<li>注意在调试中Log的不可缺失性。
+下面api如果不知道从何而来直接doc搜索就可以了。</li>
+</ol>
+
+<pre><code class="language-go">  package utility
+
+  import &quot;log&quot;
+  import &quot;os&quot;
+  import &quot;fmt&quot;
+
+  // Logger Model min variable.
+  var Logger *log.Logger
+
+  var outFile *os.File
+
+  // init function if Logger if not inited will invoke this function
+  func init() {
+    if Logger == nil {
+      propertyMap := ReadProperty(&quot;pic.properties&quot;)
+      logFileName := propertyMap[&quot;LogFile&quot;]
+      fmt.Println(&quot;Initial and Open log file &quot;, logFileName)
+      var err error
+      outFile, err = os.OpenFile(logFileName, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+
+      if err != nil {
+        panic(err.Error())
+      }
+
+      Logger = log.New(outFile, &quot;&quot;, log.Ldate|log.Ltime|log.Llongfile)
+    }
+  }
+
+  // CloseLogFile function : close Logger invoke file.
+  func CloseLogFile() {
+    outFile.Close()
+  }
+</code></pre>
+
+<p>使用方法：</p>
+
+<pre><code class="language-go">  utility.Logger.Println(&quot;Log test&quot;)
+</code></pre>
+
+<h2>总结</h2>
+
+<ol>
+<li>看完这里copy代码日常工作还是能好应付一点。</li>
+<li>如果是新手看完这个之后，看那么厚的书就有一定的目标性了。能方便一点</li>
+</ol>
+
+</div>
+
+<hr>
+本人博客文章采用<a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC Attribution-NonCommercial协议</a>: CC Attribution-NonCommercial 必须保留原作者署名,并且不允许用于商业用途,其他行为都是允许的。
+<hr>
+
+<script src="https://utteranc.es/client.js"
+        repo="lijianying10/RollingBlog"
+        issue-term="使用Golang快速构建WEB应用"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="1899/11/30/GolangWebManual/" data-title="使用Golang快速构建WEB应用" data-url="http://www.philo.top/1899/11/30/GolangWebManual/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"philotop"};
+(function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+})();
+</script>
+<!-- 多说公共JS代码 end -->
+
+<hr>
+
+                </div>
+
+                <!-- Blog Sidebar Widgets Column -->
+                <div class="col-lg-3 col-12">
+
+                    <!-- Blog Search Well -->
+                    <!--                 <div class="well">
+                        <h4>Blog Search</h4>
+                        <div class="input-group">
+                        <input type="text" class="form-control">
+                        <span class="input-group-btn">
+                        <button class="btn btn-default" type="button">
+                        <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        </span>
+                        </div> -->
+                        <!-- /.input-group -->
+                        <!-- </div> -->
+
+                        <!-- Blog Categories Well -->
+                        <div class="well">
+                            <h4>TAGS</h4>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/wiki">wiki(2)</a></br><a href="/tags/thinking">thinking(3)</a></br><a href="/tags/node">node(1)</a></br><a href="/tags/iptables">iptables(1)</a></br><a href="/tags/devenv">devenv(1)</a></br><a href="/tags/elk">elk(1)</a></br><a href="/tags/oop">oop(1)</a></br><a href="/tags/html">html(1)</a></br><a href="/tags/mesos">mesos(1)</a></br><a href="/tags/tmux">tmux(1)</a></br><a href="/tags/git">git(8)</a></br><a href="/tags/nodejs">nodejs(1)</a></br><a href="/tags/DaoCloud">DaoCloud(1)</a></br><a href="/tags/java">java(2)</a></br><a href="/tags/visualization">visualization(1)</a></br><a href="/tags/elasticsearch">elasticsearch(1)</a></br><a href="/tags/requirejs">requirejs(1)</a></br><a href="/tags/network">network(2)</a></br><a href="/tags/dns">dns(1)</a></br><a href="/tags/ss">ss(1)</a></br><a href="/tags/css">css(1)</a></br><a href="/tags/docker">docker(22)</a></br><a href="/tags/centos">centos(1)</a></br><a href="/tags/mysql">mysql(3)</a></br><a href="/tags/grub">grub(1)</a></br><a href="/tags/butterfly">butterfly(1)</a></br><a href="/tags/web">web(3)</a></br><a href="/tags/php">php(1)</a></br><a href="/tags/mongodab">mongodab(1)</a></br><a href="/tags/putty">putty(2)</a></br><a href="/tags/RHEL">RHEL(1)</a></br><a href="/tags/PXE">PXE(1)</a></br><a href="/tags/ci">ci(1)</a></br><a href="/tags/iPXE">iPXE(1)</a></br><a href="/tags/gh60">gh60(1)</a></br><a href="/tags/env">env(2)</a></br><a href="/tags/DES">DES(1)</a></br><a href="/tags/microservice">microservice(2)</a></br><a href="/tags/Ubuntu">Ubuntu(1)</a></br><a href="/tags/logstash">logstash(1)</a></br><a href="/tags/c">c(1)</a></br><a href="/tags/marathon">marathon(1)</a></br><a href="/tags/owncloud">owncloud(1)</a></br><a href="/tags/npm">npm(1)</a></br><a href="/tags/virtualbox">virtualbox(3)</a></br><a href="/tags/python">python(4)</a></br><a href="/tags/delegate">delegate(1)</a></br><a href="/tags/mac">mac(2)</a></br><a href="/tags/tray">tray(1)</a></br><a href="/tags/require.js">require.js(1)</a></br><a href="/tags/etcd">etcd(3)</a></br><a href="/tags/postgresql">postgresql(1)</a></br><a href="/tags/systemd-resolved">systemd-resolved(1)</a></br><a href="/tags/js">js(8)</a></br><a href="/tags/phpExtension">phpExtension(1)</a></br><a href="/tags/rancher">rancher(2)</a></br><a href="/tags/html5">html5(1)</a></br><a href="/tags/test">test(1)</a></br>
+                                    </ul>
+                                </div>
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/homebrew">homebrew(1)</a></br><a href="/tags/linux">linux(5)</a></br><a href="/tags/macos">macos(1)</a></br><a href="/tags/Cow">Cow(1)</a></br><a href="/tags/yaml">yaml(1)</a></br><a href="/tags/golang">golang(23)</a></br><a href="/tags/ucloud">ucloud(1)</a></br><a href="/tags/redsocks">redsocks(1)</a></br><a href="/tags/article">article(1)</a></br><a href="/tags/Docker">Docker(2)</a></br><a href="/tags/minecraft">minecraft(2)</a></br><a href="/tags/vim">vim(3)</a></br><a href="/tags/storage">storage(1)</a></br><a href="/tags/atom">atom(2)</a></br><a href="/tags/MongoDB">MongoDB(1)</a></br><a href="/tags/runc">runc(1)</a></br><a href="/tags/bootstrap">bootstrap(1)</a></br><a href="/tags/HomeBrew">HomeBrew(1)</a></br><a href="/tags/iterm2">iterm2(1)</a></br><a href="/tags/flannel">flannel(1)</a></br><a href="/tags/RunC">RunC(1)</a></br><a href="/tags/bazel">bazel(2)</a></br><a href="/tags/dev">dev(2)</a></br><a href="/tags/profiling">profiling(2)</a></br><a href="/tags/kibina">kibina(1)</a></br><a href="/tags/android">android(1)</a></br><a href="/tags/hexo">hexo(3)</a></br><a href="/tags/nginx">nginx(6)</a></br><a href="/tags/ubuntu">ubuntu(5)</a></br><a href="/tags/career">career(1)</a></br><a href="/tags/syslinux">syslinux(1)</a></br><a href="/tags/aglio">aglio(1)</a></br><a href="/tags/blog">blog(1)</a></br><a href="/tags/liteIDE">liteIDE(1)</a></br><a href="/tags/metaprogramming">metaprogramming(1)</a></br><a href="/tags/BusyBox">BusyBox(1)</a></br><a href="/tags/杂谈">杂谈(1)</a></br><a href="/tags/thrift">thrift(1)</a></br><a href="/tags/rkt">rkt(1)</a></br><a href="/tags/ssl">ssl(2)</a></br><a href="/tags/letsencrypt">letsencrypt(1)</a></br><a href="/tags/consul">consul(1)</a></br><a href="/tags/mongodb">mongodb(3)</a></br><a href="/tags/busybox">busybox(1)</a></br><a href="/tags/coreos">coreos(1)</a></br><a href="/tags/GC">GC(1)</a></br><a href="/tags/Linux">Linux(13)</a></br><a href="/tags/ShadowSocks">ShadowSocks(1)</a></br><a href="/tags/registry">registry(3)</a></br><a href="/tags/CoreOS">CoreOS(1)</a></br><a href="/tags/netplan">netplan(1)</a></br><a href="/tags/godoc">godoc(1)</a></br><a href="/tags/osx">osx(4)</a></br><a href="/tags/datatables">datatables(1)</a></br><a href="/tags/StackStorm2">StackStorm2(1)</a></br><a href="/tags/tenxcloud">tenxcloud(1)</a></br><a href="/tags/shell">shell(6)</a></br>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+
+                        <!-- Side Widget Well -->
+                        <div class="well">
+                            <h4>近期文章</h4>
+                            <a href="/2021/03/14/metaprogramming/">Metaprogramming and code generation/replace in action</a></br><a href="/2021/02/15/dockerprivateregistryen/">deploy docker registry under private network</a></br><a href="/2021/02/14/golangvimdev/">my vim golang programming environment</a></br><a href="/2021/02/06/bazelmacro/">bazel macro 的开发</a></br><a href="/2021/01/15/bazelboost/">bazel 使用经验和记录</a></br><a href="/2021/01/14/dockerprivateregistry/">小型团队内网创建docker registry</a></br><a href="/2021/01/14/ubuntudnssystemdresolved/">网关服务器部署DNS的冲突问题解决</a></br><a href="/2021/01/13/iptablesredsocksdocker/">iptables 使用 Redsocks 时候 Docker 没有网络问题的分析</a></br>
+                        </div>
+                        <div class="well">
+                            <h4>友情链接</h4>
+                            <a href="https://linux.cn/">Linux中国</a></br>
+                            <a href="http://locez.com/">LOCEZ</a></br>
+                            <a href="http://blog.ibeats.top/">CI_Knight</a>
+                        </div>
+
+                </div>
+
+            </div>
+            <!-- /.row -->
+
+            <hr>
+
+            <!-- Footer -->
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Copyright &copy; philo.top PowerBy <a href="https://github.com/lijianying10/RollingBlog">RollingBlog</a> 2020 Since 2015</p>
+                        <!-- Global site tag (gtag.js) - Google Analytics -->
+                        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173403528-1"></script>
+                        <script>
+                          window.dataLayer = window.dataLayer || [];
+                          function gtag(){dataLayer.push(arguments);}
+                          gtag('js', new Date());
+                        
+                          gtag('config', 'UA-173403528-1');
+                        </script>
+
+                    </div>
+                </div>
+                <!-- /.row -->
+            </footer>
+
+        </div>
+        <!-- /.container -->
+
+        <!-- jQuery -->
+        <script src="/js/jquery.js"></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/prism.js"></script>
+
+    </body>
+
+</html>
+

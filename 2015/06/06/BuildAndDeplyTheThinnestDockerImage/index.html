@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>构建最小Docker Image运行网站程序并部署到DaoCloud中</title>
+        <link href="/css/prism.css" rel="stylesheet">
+        <link href="/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/css/blog-post.css" rel="stylesheet">
+        <link href="/css/typo.css" rel="stylesheet">
+        <link rel="shortcut icon" href="/favicon.ico" />
+    </head>
+
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Philo</a>
+                </div>
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/">HOME</a>
+                        </li>
+                        <li>
+                            <a href="/archive/">Archive</a>
+                        </li>
+                        <li>
+                            <a href="/2015/02/21/index/index.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container -->
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container" style="
+                margin-top: 70px;
+                ">
+
+            <div class="row">
+
+                <!-- Blog Post Content Column -->
+                <div class="col-lg-9 col-12">
+
+                    <!-- Blog Post -->
+
+<!-- Title -->
+<h1><a href="/2015/06/06/BuildAndDeplyTheThinnestDockerImage/">构建最小Docker Image运行网站程序并部署到DaoCloud中</a></h1>
+ 
+<!-- Author -->
+<p class="lead">
+Tags
+
+<a href="/tags/DaoCloud">DaoCloud</a>
+
+<a href="/tags/Docker">Docker</a>
+
+<a href="/tags/Linux">Linux</a>
+
+<a href="/tags/Ubuntu">Ubuntu</a>
+
+<a href="/tags/BusyBox">BusyBox</a>
+
+<a href="/tags/golang">golang</a>
+
+</p>
+
+<hr>
+
+<!-- Date/Time -->
+<p><span class="glyphicon glyphicon-time"></span> 2015-06-06 17:00:22</p>
+
+<hr>
+
+<div class="typo">
+<p><img src="http://7viiaq.com1.z0.glb.clouddn.com/docker.jpg" alt="" /></p>
+
+<h2>意义：</h2>
+
+<p>在前人的工作中：<a href="http://blog.xebia.com/2014/07/04/create-the-smallest-possible-docker-container/">创建尽可能小的Docker容器</a>，<a href="http://www.tuicool.com/articles/3yiume">中文翻译版本</a>。经过对比我们可以发现 Adriaan de Jonge的的工作方式是通过CGO实现golang的静态编译以达到目的。我们认为这种方式虽然很棒，但是操作起来并不容易，而且在很多项目中编译起来颇为麻烦。</p>
+
+<p>为了精益求精，我们在极致精简与正常使用操作系统（比如说基于ubuntu14.04）做工程角度的平衡，我们还是基于Scratch空Docker image进行构建，使用busybox重新构建了一个大小为5MB左右裁剪过的Linux作为golang运行环境，该系统可以直接使用普通golang编译器输出amd64架构的程序，整个image构建完成之后大小为11.75mb。在DaoCloud中可以达到秒级构建，经过4次测试3次在一分钟以下最短45秒。</p>
+
+<p>Dockerfile以及环境参考：<a href="https://github.com/lijianying10/DaoCloudStaticBlog">https://github.com/lijianying10/DaoCloudStaticBlog</a></p>
+
+<h2>golang HTTP 主程序</h2>
+
+<pre><code class="language-golang">package main
+
+import &quot;net/http&quot;
+import &quot;fmt&quot;
+
+func main() {
+	fmt.Println(&quot;Server start&quot;) //最简单的日志提示已经开始工作
+	http.Handle(&quot;/&quot;,http.FileServer(http.Dir(&quot;/public/&quot;))) // 设置静态文件路由
+	http.ListenAndServe(&quot;:8080&quot;, nil)// 开始http server
+}
+</code></pre>
+
+<p>Golang给出了足够多的Web开发工具包，可以编写简短的代码写出高性能web静态服务器。</p>
+
+<h2>Docker image中底层系统的构建</h2>
+
+<p>如果方便使用ubuntu 14.04 amd64的情况下：</p>
+
+<pre><code class="language-shell">apt-get install busybox-static #安装busybox
+mkdir /rootfs #新建根
+mkdir bin etc dev dev/pts lib proc sys tmp #根据根的格式创建目录
+touch etc/resolv.conf # DNS服务器地址
+cp /etc/nsswitch.conf etc/nsswitch.conf #名字解析配置
+echo root:x:0:0:root:/:/bin/sh &gt; etc/passwd # 新建用户
+echo root:x:0: &gt; etc/group #新建用户组
+ln -s lib lib64 # 创建软连接
+ln -s bin sbin 
+cp /bin/busybox bin # 复制bin文件，不然没有命令用
+$(which busybox) --install -s bin #同上两步操作，用which是因为需要绝对路径
+bash -c &quot;cp /lib/x86_64-linux-gnu/lib{c,m,dl,crypt,util,rt,nsl,nss_*,pthread,resolv}.so.* lib&quot; # 这一步很重要，如果使用了Go调用外部动态库这里需要复制进去，
+bash -c &quot;cp /lib/x86_64-linux-gnu/ld* lib&quot; #同上
+cp /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 lib #同上
+tar cf /rootfs.tar . #根目录打包
+for X in console null ptmx random stdin stdout stderr tty urandom zero ; do tar uf /rootfs.tar -C/ ./dev/$X ; done #复制设备，注意自己的程序调用的设备，比如说random，顺便吐槽一下等待cpu周期太长
+</code></pre>
+
+<p>构建调试过程中的注意事项：
+1. 在复制lib文件夹的底层动态库的时候需要不断调试动态库的依赖。
+2. 因为容器中要运行不同的项目，有可能对设备与权限上有不同的需求，需要注意定制脚本及时调整。
+3. 整个打包过程每次项目几乎只需要一次，调整项目大部分情况都是增量打包因此精简系统文件尽量仔细做。</p>
+
+<p>boot2Docker 跨平台解决方案的Dockerfile(仿造上面来)：</p>
+
+<pre><code>FROM ubuntu:14.04
+RUN apt-get update -q
+RUN apt-get install -qy busybox-static
+RUN mkdir /rootfs
+WORKDIR /rootfs
+RUN mkdir bin etc dev dev/pts lib proc sys tmp
+RUN touch etc/resolv.conf
+RUN cp /etc/nsswitch.conf etc/nsswitch.conf
+RUN echo root:x:0:0:root:/:/bin/sh &gt; etc/passwd
+RUN echo root:x:0: &gt; etc/group
+RUN ln -s lib lib64
+RUN ln -s bin sbin
+RUN cp /bin/busybox bin
+RUN $(which busybox) --install -s bin
+RUN bash -c &quot;cp /lib/x86_64-linux-gnu/lib{c,m,dl,crypt,util,rt,nsl,nss_*,pthread,resolv}.so.* lib&quot;
+RUN bash -c &quot;cp /lib/x86_64-linux-gnu/ld* lib&quot;
+RUN cp /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 lib
+RUN tar cf /rootfs.tar .
+RUN for X in console null ptmx random stdin stdout stderr tty urandom zero ; do tar uf /rootfs.tar -C/ ./dev/$X ; done
+</code></pre>
+
+<h2>非安全快速解决方案</h2>
+
+<p>我们这里的安全性是指，我提供的tar根目录中也许包含了老版本的代码漏洞，或者各种技术债务。如果不是特殊场景下不需要自己手动构建Linux根。</p>
+
+<p>具体解决方案如下：
+1. 直接在Dockerhub上使用progrium/busybox
+2. 直接使用我们在github上共享的rootfs.tar</p>
+
+<p>方式1不是很推荐，因为构建的适合需要从网上下载依赖，可能会降低构建速度。
+非安全情况下推荐方式2构建所需要的docker image</p>
+
+<p>方式1构建的Dockerfile:</p>
+
+<pre><code>FROM progrium/busybox
+MAINTAINER Jianying Li &lt;lijianying12@gmail.com&gt;
+
+RUN mkdir -p /app
+WORKDIR /app
+COPY ./static /app/
+COPY ./public /public
+EXPOSE 80
+
+CMD [&quot;/app/static&quot;]
+</code></pre>
+
+<p>方式2构建使用的Dockerfile：</p>
+
+<pre><code>FROM scratch
+MAINTAINER Jianying Li &lt;lijianying12@gmail.com&gt;
+
+ADD ./rootfs.tar /
+RUN mkdir -p /app
+WORKDIR /app
+COPY ./static /app/
+COPY ./public /public
+EXPOSE 80
+
+CMD [&quot;/app/static&quot;]
+</code></pre>
+
+<p>Tip: static为第一节编译好的golang静态程序
+public为静态网站根目录</p>
+
+<p>Tip：在构建时请不要使用<code>sudo docker build -&lt; somefile</code>
+要使用<code>sudo docker build .</code></p>
+
+<p>Tip： 方式2是我在Github中提供的方式。</p>
+
+<h2>跨平台支持</h2>
+
+<p>在本方案中跨平台的支持主要有两个方面：
+1. golang源程序的跨平台编译：GOX
+2. busybox 系统根(方案二中的Dockerfile中的文件rootfs.tar)的编译可以通过boot2docker来实现。</p>
+
+<h2>DaoCloud部署</h2>
+
+<p>DaoCloud给我们提供了一个非常好的测试平台，验证性能工作方式等等，不需要电脑中有Docker环境也可非常方便测试。
+在这里我们介绍一下上面提供的<a href="https://github.com/lijianying10/DaoCloudStaticBlog">github仓库</a>的使用方法。
+1. Fork我们提供的代码仓库到您的github账号中。
+2. 登陆到<a href="https://dashboard.daocloud.io/">DaoCloud.io</a>使用代码构建功能
+3. 给项目取名字
+4. 登陆到github中系统会列出您在Github中的所有项目。并选中DaoCloudStaticBlog项目点击开始创建</p>
+
+<p>在这之后DaoCloud会帮您创建目标项目的DockerImage。
+在镜像仓库中找到项目点击部署给容器起名选择环境即可运行。</p>
+
+<p><strong>注意事项</strong>
+1. Golang程序中的端口一定要与Dockerfile中的EXPOSE的号码对应，不然外网无法从DaoCloud访问您的容器。
+2. CMD中注意要直接运行网站。
+3. 如果条件允许请在本地调试运行之后再部署到DaoCloud中。</p>
+
+<h2>总结</h2>
+
+<p>在本次工作中我们使用了BusyBox来替代原来CGO的实施方案，有效的解决了编译时的麻烦。建立了底层依赖后直接复制应用程序进入Docker image完成在DaoCloud上的部署。在Dockerfile的依赖上我们直接使用了scratch没有任何依赖，加快了构建的速度达到秒级构建。</p>
+
+</div>
+
+<hr>
+本人博客文章采用<a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC Attribution-NonCommercial协议</a>: CC Attribution-NonCommercial 必须保留原作者署名,并且不允许用于商业用途,其他行为都是允许的。
+<hr>
+
+<script src="https://utteranc.es/client.js"
+        repo="lijianying10/RollingBlog"
+        issue-term="构建最小Docker Image运行网站程序并部署到DaoCloud中"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2015/06/06/BuildAndDeplyTheThinnestDockerImage/" data-title="构建最小Docker Image运行网站程序并部署到DaoCloud中" data-url="http://www.philo.top/2015/06/06/BuildAndDeplyTheThinnestDockerImage/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"philotop"};
+(function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+})();
+</script>
+<!-- 多说公共JS代码 end -->
+
+<hr>
+
+                </div>
+
+                <!-- Blog Sidebar Widgets Column -->
+                <div class="col-lg-3 col-12">
+
+                    <!-- Blog Search Well -->
+                    <!--                 <div class="well">
+                        <h4>Blog Search</h4>
+                        <div class="input-group">
+                        <input type="text" class="form-control">
+                        <span class="input-group-btn">
+                        <button class="btn btn-default" type="button">
+                        <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        </span>
+                        </div> -->
+                        <!-- /.input-group -->
+                        <!-- </div> -->
+
+                        <!-- Blog Categories Well -->
+                        <div class="well">
+                            <h4>TAGS</h4>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/wiki">wiki(2)</a></br><a href="/tags/thinking">thinking(3)</a></br><a href="/tags/node">node(1)</a></br><a href="/tags/iptables">iptables(1)</a></br><a href="/tags/devenv">devenv(1)</a></br><a href="/tags/elk">elk(1)</a></br><a href="/tags/oop">oop(1)</a></br><a href="/tags/html">html(1)</a></br><a href="/tags/mesos">mesos(1)</a></br><a href="/tags/tmux">tmux(1)</a></br><a href="/tags/git">git(8)</a></br><a href="/tags/nodejs">nodejs(1)</a></br><a href="/tags/DaoCloud">DaoCloud(1)</a></br><a href="/tags/java">java(2)</a></br><a href="/tags/visualization">visualization(1)</a></br><a href="/tags/elasticsearch">elasticsearch(1)</a></br><a href="/tags/requirejs">requirejs(1)</a></br><a href="/tags/network">network(2)</a></br><a href="/tags/dns">dns(1)</a></br><a href="/tags/ss">ss(1)</a></br><a href="/tags/css">css(1)</a></br><a href="/tags/docker">docker(22)</a></br><a href="/tags/centos">centos(1)</a></br><a href="/tags/mysql">mysql(3)</a></br><a href="/tags/grub">grub(1)</a></br><a href="/tags/butterfly">butterfly(1)</a></br><a href="/tags/web">web(3)</a></br><a href="/tags/php">php(1)</a></br><a href="/tags/mongodab">mongodab(1)</a></br><a href="/tags/putty">putty(2)</a></br><a href="/tags/RHEL">RHEL(1)</a></br><a href="/tags/PXE">PXE(1)</a></br><a href="/tags/ci">ci(1)</a></br><a href="/tags/iPXE">iPXE(1)</a></br><a href="/tags/gh60">gh60(1)</a></br><a href="/tags/env">env(2)</a></br><a href="/tags/DES">DES(1)</a></br><a href="/tags/microservice">microservice(2)</a></br><a href="/tags/Ubuntu">Ubuntu(1)</a></br><a href="/tags/logstash">logstash(1)</a></br><a href="/tags/c">c(1)</a></br><a href="/tags/marathon">marathon(1)</a></br><a href="/tags/owncloud">owncloud(1)</a></br><a href="/tags/npm">npm(1)</a></br><a href="/tags/virtualbox">virtualbox(3)</a></br><a href="/tags/python">python(4)</a></br><a href="/tags/delegate">delegate(1)</a></br><a href="/tags/mac">mac(2)</a></br><a href="/tags/tray">tray(1)</a></br><a href="/tags/require.js">require.js(1)</a></br><a href="/tags/etcd">etcd(3)</a></br><a href="/tags/postgresql">postgresql(1)</a></br><a href="/tags/systemd-resolved">systemd-resolved(1)</a></br><a href="/tags/js">js(8)</a></br><a href="/tags/phpExtension">phpExtension(1)</a></br><a href="/tags/rancher">rancher(2)</a></br><a href="/tags/html5">html5(1)</a></br><a href="/tags/test">test(1)</a></br>
+                                    </ul>
+                                </div>
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/homebrew">homebrew(1)</a></br><a href="/tags/linux">linux(5)</a></br><a href="/tags/macos">macos(1)</a></br><a href="/tags/Cow">Cow(1)</a></br><a href="/tags/yaml">yaml(1)</a></br><a href="/tags/golang">golang(23)</a></br><a href="/tags/ucloud">ucloud(1)</a></br><a href="/tags/redsocks">redsocks(1)</a></br><a href="/tags/article">article(1)</a></br><a href="/tags/Docker">Docker(2)</a></br><a href="/tags/minecraft">minecraft(2)</a></br><a href="/tags/vim">vim(3)</a></br><a href="/tags/storage">storage(1)</a></br><a href="/tags/atom">atom(2)</a></br><a href="/tags/MongoDB">MongoDB(1)</a></br><a href="/tags/runc">runc(1)</a></br><a href="/tags/bootstrap">bootstrap(1)</a></br><a href="/tags/HomeBrew">HomeBrew(1)</a></br><a href="/tags/iterm2">iterm2(1)</a></br><a href="/tags/flannel">flannel(1)</a></br><a href="/tags/RunC">RunC(1)</a></br><a href="/tags/bazel">bazel(2)</a></br><a href="/tags/dev">dev(2)</a></br><a href="/tags/profiling">profiling(2)</a></br><a href="/tags/kibina">kibina(1)</a></br><a href="/tags/android">android(1)</a></br><a href="/tags/hexo">hexo(3)</a></br><a href="/tags/nginx">nginx(6)</a></br><a href="/tags/ubuntu">ubuntu(5)</a></br><a href="/tags/career">career(1)</a></br><a href="/tags/syslinux">syslinux(1)</a></br><a href="/tags/aglio">aglio(1)</a></br><a href="/tags/blog">blog(1)</a></br><a href="/tags/liteIDE">liteIDE(1)</a></br><a href="/tags/metaprogramming">metaprogramming(1)</a></br><a href="/tags/BusyBox">BusyBox(1)</a></br><a href="/tags/杂谈">杂谈(1)</a></br><a href="/tags/thrift">thrift(1)</a></br><a href="/tags/rkt">rkt(1)</a></br><a href="/tags/ssl">ssl(2)</a></br><a href="/tags/letsencrypt">letsencrypt(1)</a></br><a href="/tags/consul">consul(1)</a></br><a href="/tags/mongodb">mongodb(3)</a></br><a href="/tags/busybox">busybox(1)</a></br><a href="/tags/coreos">coreos(1)</a></br><a href="/tags/GC">GC(1)</a></br><a href="/tags/Linux">Linux(13)</a></br><a href="/tags/ShadowSocks">ShadowSocks(1)</a></br><a href="/tags/registry">registry(3)</a></br><a href="/tags/CoreOS">CoreOS(1)</a></br><a href="/tags/netplan">netplan(1)</a></br><a href="/tags/godoc">godoc(1)</a></br><a href="/tags/osx">osx(4)</a></br><a href="/tags/datatables">datatables(1)</a></br><a href="/tags/StackStorm2">StackStorm2(1)</a></br><a href="/tags/tenxcloud">tenxcloud(1)</a></br><a href="/tags/shell">shell(6)</a></br>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+
+                        <!-- Side Widget Well -->
+                        <div class="well">
+                            <h4>近期文章</h4>
+                            <a href="/2021/03/14/metaprogramming/">Metaprogramming and code generation/replace in action</a></br><a href="/2021/02/15/dockerprivateregistryen/">deploy docker registry under private network</a></br><a href="/2021/02/14/golangvimdev/">my vim golang programming environment</a></br><a href="/2021/02/06/bazelmacro/">bazel macro 的开发</a></br><a href="/2021/01/15/bazelboost/">bazel 使用经验和记录</a></br><a href="/2021/01/14/dockerprivateregistry/">小型团队内网创建docker registry</a></br><a href="/2021/01/14/ubuntudnssystemdresolved/">网关服务器部署DNS的冲突问题解决</a></br><a href="/2021/01/13/iptablesredsocksdocker/">iptables 使用 Redsocks 时候 Docker 没有网络问题的分析</a></br>
+                        </div>
+                        <div class="well">
+                            <h4>友情链接</h4>
+                            <a href="https://linux.cn/">Linux中国</a></br>
+                            <a href="http://locez.com/">LOCEZ</a></br>
+                            <a href="http://blog.ibeats.top/">CI_Knight</a>
+                        </div>
+
+                </div>
+
+            </div>
+            <!-- /.row -->
+
+            <hr>
+
+            <!-- Footer -->
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Copyright &copy; philo.top PowerBy <a href="https://github.com/lijianying10/RollingBlog">RollingBlog</a> 2020 Since 2015</p>
+                        <!-- Global site tag (gtag.js) - Google Analytics -->
+                        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173403528-1"></script>
+                        <script>
+                          window.dataLayer = window.dataLayer || [];
+                          function gtag(){dataLayer.push(arguments);}
+                          gtag('js', new Date());
+                        
+                          gtag('config', 'UA-173403528-1');
+                        </script>
+
+                    </div>
+                </div>
+                <!-- /.row -->
+            </footer>
+
+        </div>
+        <!-- /.container -->
+
+        <!-- jQuery -->
+        <script src="/js/jquery.js"></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/prism.js"></script>
+
+    </body>
+
+</html>
+

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>bazel macro 的开发</title>
+        <link href="/css/prism.css" rel="stylesheet">
+        <link href="/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/css/blog-post.css" rel="stylesheet">
+        <link href="/css/typo.css" rel="stylesheet">
+        <link rel="shortcut icon" href="/favicon.ico" />
+    </head>
+
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Philo</a>
+                </div>
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/">HOME</a>
+                        </li>
+                        <li>
+                            <a href="/archive/">Archive</a>
+                        </li>
+                        <li>
+                            <a href="/2015/02/21/index/index.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container -->
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container" style="
+                margin-top: 70px;
+                ">
+
+            <div class="row">
+
+                <!-- Blog Post Content Column -->
+                <div class="col-lg-9 col-12">
+
+                    <!-- Blog Post -->
+
+<!-- Title -->
+<h1><a href="/2021/02/06/bazelmacro/">bazel macro 的开发</a></h1>
+ 
+<!-- Author -->
+<p class="lead">
+Tags
+
+<a href="/tags/bazel">bazel</a>
+
+</p>
+
+<hr>
+
+<!-- Date/Time -->
+<p><span class="glyphicon glyphicon-time"></span> 2021-02-06 13:17:41</p>
+
+<hr>
+
+<div class="typo">
+<p>当你有了很多rules可以用在你的工程，当你做一些事务去构建你的目标你会发现BUILDfile开始出现大段的只有参数不同的重复代码降低了代码的复用率。</p>
+
+<p>bazel 的不同于其他构建过程的配置并不是创造一个DSL出来解决这个问题。而通过 Starlark 语言来做到 target 分析。 其关键点在于bazel的运行分为三个阶段 (<a href="https://docs.bazel.build/versions/master/skylark/concepts.html#evaluation-model">three phase</a>) 其中我们使用 starlark 语言去定义我们的构建目标的过程是在第二个阶段。</p>
+
+<h2>一个Macro的例子</h2>
+
+<pre><code class="language-starlark">load(&quot;:render.bzl&quot;, &quot;blender_render&quot;)
+load(&quot;//ffmpeg:ffmpeg.bzl&quot;, &quot;ffmpeg_combine_video&quot;)
+
+def blender_render_batch(targets, out):
+    render_targets = []
+    for t in targets:
+        lb = Label(t)
+        render_targets.append(t+&quot;_render&quot;)
+        blender_render(
+            name = lb.name+&quot;_render&quot;,
+            blender_project = t,
+            out = lb.name+&quot;.mp4&quot;
+        )
+    ffmpeg_combine_video(
+        name = out+&quot;_render&quot;,
+        input = render_targets,
+        out = out+&quot;.mp4&quot;,
+    )
+</code></pre>
+
+<p>CodeReview提示：进入函数之后我们通过 <code>blender_render</code> 这个 <code>rule</code> 把数组内标记的 <code>blender project</code> 渲染成 <code>mp4</code> 视频文件并且记录相关的渲染过程的 <code>target</code> 到数组 <code>render_targets</code> 中最后放到 <code>ffmpeg_combine_video</code> 这个 <code>rule</code> 把这一系列的mp4文件合并成为一个整体视频。这样我们就可以通过这个方法实现视频的工业化生产减少人工剪辑的介入。</p>
+
+<p>让我们来观察上面的macro实现</p>
+
+<ol>
+<li>我们需要把上面的代码放到 <code>render_batch.bzl</code> 中。
+
+<ol>
+<li>然后我们可以通过 <code>load(&quot;@rules_3dmodule//blender:render_batch.bzl&quot;,&quot;blender_render_batch&quot;)</code> 如上的load代码就可以准备好调用上面的函数实现了。</li>
+</ol></li>
+<li>我们可以看到其实还是与写 <code>rule</code> 很像，只是我们并不需要定义 <code>rule</code> 函数中也不需要有 <code>ctx</code> 更不需要 <code>actions</code> 有所执行。</li>
+<li>其中核心的功能实现是通过 <code>load</code> rule 之后把 rule 当成函数调用即可。</li>
+<li>在写 <code>starlark</code> 代码中需要注意只有数组(<code>array</code>)和字典(<code>dict</code>)是可以修改(<code>mutable</code>)的变量其他的都是不可修改(<code>immutable</code>)变量这是为了并行, 这在代码开发中至关重要。按照普通开发语言的开发思路去写会因此掉到坑里。</li>
+</ol>
+
+<h2>深入解析</h2>
+
+<p>通过上面的例子我们可以通过分析了解到： <code>Analysis phase</code> 从原理上来讲是通过 <code>(ctx.action)[https://docs.bazel.build/versions/master/skylark/lib/actions.html]</code> 作为 <code>(DAG)[https://en.wikipedia.org/wiki/Directed_acyclic_graph]</code> 的 <code>Node</code> 我们可以从<a href="https://docs.bazel.build/versions/master/build-ref.html#dependencies">这里</a> 来印证我们的观察。 因此我们写的代码或者准确来说 <code>Macro</code> 是通过运行之后帮助 <code>bazel</code> 来构建整个 <code>DAG</code> 的过程。 掌握了这个核心思想之后再开发 <code>Macro</code> 会轻松很多。</p>
+
+<h2>状态处理</h2>
+
+<p>当我们学会了把一些列固定的操作写到函数当中很快你会发现你需要对状态进行处理。 例如在我的工程中，我需要对每个 blender target 标记需要并且让构建运行时知道自己在整体工程中的位置，从视频剪辑的角度来讲叫做场序（或者说你是第几个视频片段）因此我们写的Macro需要处理运行状态问题。</p>
+
+<p>一个例子：</p>
+
+<p>以下为文件 <code>counter.bzl</code> 的内容</p>
+
+<pre><code>def video_scene_append(target_list,target):
+    c = len(target_list)
+    target_list.append(&quot;//%s:%s&quot;%(native.package_name(),target))
+    return c
+</code></pre>
+
+<p>文件说明： 我们把target变量append到target_list当中，并且返回target在数组中的index作为函数返回。 这样我们就可以定义出target在构建中的序号了。</p>
+
+<p>以下为 BUILD 的文件内容</p>
+
+<pre><code>load(&quot;counter.bzl&quot;,&quot;video_scene_append&quot;)
+
+# 1. storage video sequence list
+# 2. as a counter for video move sequence
+video_scene_list = []
+
+video_scene_append(video_scene_list,&quot;stag1&quot;)
+</code></pre>
+
+<p>我们把状态存储的变量放到 <code>BUILD</code> 文件当中， 并且调用函数实现功能。</p>
+
+<h2>配置处理建议</h2>
+
+<p>我们可以使用 Jsonnet 来作为配置生成的入口下面是一个例子：</p>
+
+<p>在 <code>BUILD</code> file 当中</p>
+
+<pre><code>jsonnet_to_json(
+    name = &quot;config_gen_stag4&quot;, 
+    src = &quot;databargroup_config.jsonnet&quot;, 
+    outs = [&quot;config_gen_stag4.json&quot;], 
+    ext_code = {
+        &quot;config&quot;: &quot;&quot;&quot;
+        {
+            default_shift_between_bar:2.6,
+            animation_config+:{
+                data_bar_keep_frames:24*2,
+            },
+            num_panel_cfg+:{
+                data_division:1.0
+            }
+        }
+        &quot;&quot;&quot;,
+        &quot;data_bar_count&quot;:str(first_video_consts_get(stag4_dbg_count_key_name)),
+    }, 
+)
+</code></pre>
+
+<p>在 <code>databargroup_config.jsonnet</code> 当中</p>
+
+<pre><code>local tmpl = {
+  &quot;default_shift_between_bar&quot;: 1.3,
+  &quot;title_panel_size_x&quot;: 2,
+  &quot;title_panel_size_y&quot;: 1,
+  &quot;title_panel_scale&quot;: 0.9,
+  &quot;title_panel_distance_to_data_bar&quot;: -1.2,
+  &quot;title_panel_distance_to_camera&quot;: 0.4,
+  &quot;num_panel_exist&quot;: true,
+  &quot;num_panel_cfg&quot;: {
+    &quot;blah&quot;: &quot;blah&quot;,
+  },
+  &quot;animation_config&quot;: {
+    &quot;blah&quot;: &quot;blah&quot;,,
+  }
+};
+
+tmpl + std.extVar('config') + {data_bar_count:std.extVar('data_bar_count')} 
+</code></pre>
+
+<p>这样我们在真正执行构建 <code>stag4</code> 这个视频片段就可以使用 <code>config_gen_stag4</code> 渲染好的 <code>json</code> 来执行 <code>3d</code> 建模生产 <code>blender project</code>。</p>
+
+<p>其中 Jsonnet 语法可以参考关于 <a href="https://jsonnet.org/learning/tutorial.html#oo">OOP</a> 的语法解释。</p>
+
+<h2>配置硬编码问题</h2>
+
+<p>当你解决了配置生成问题之后会遇到配置硬编码的问题这里没什么好分享的可以直接<a href="https://docs.bazel.build/versions/master/skylark/config.html">参考文档</a>。</p>
+
+<p>具体使用中可以参考 <a href="https://docs.bazel.build/versions/master/guide.html#bazelrc-the-bazel-configuration-file"><code>.bazelrc</code></a> 的说明。</p>
+
+<p>从上面的参考文档我们可以知道 <code>flag</code> 的名字是可以使用 bazel label 作为名字的因此我们的 bazelrc 还是一种代码生成很友好的解决方案。</p>
+
+<h2>最后</h2>
+
+<p>我经过了上面的学习和实践同时我也学习到了 <a href="https://github.com/google/starlark-go/">starlark-go</a> 和 <a href="https://github.com/google/go-jsonnet">go-jsonnet</a> 结合在一起会是一个非常好的组合， 无论是在配置，编排，还是自动化领域都是一个不错工具。 在未来的产品开发和构建当中我应该会使用这种组合来提升我的人效。</p>
+
+</div>
+
+<hr>
+本人博客文章采用<a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC Attribution-NonCommercial协议</a>: CC Attribution-NonCommercial 必须保留原作者署名,并且不允许用于商业用途,其他行为都是允许的。
+<hr>
+
+<script src="https://utteranc.es/client.js"
+        repo="lijianying10/RollingBlog"
+        issue-term="bazel macro 的开发"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2021/02/06/bazelmacro/" data-title="bazel macro 的开发" data-url="http://www.philo.top/2021/02/06/bazelmacro/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"philotop"};
+(function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+})();
+</script>
+<!-- 多说公共JS代码 end -->
+
+<hr>
+
+                </div>
+
+                <!-- Blog Sidebar Widgets Column -->
+                <div class="col-lg-3 col-12">
+
+                    <!-- Blog Search Well -->
+                    <!--                 <div class="well">
+                        <h4>Blog Search</h4>
+                        <div class="input-group">
+                        <input type="text" class="form-control">
+                        <span class="input-group-btn">
+                        <button class="btn btn-default" type="button">
+                        <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        </span>
+                        </div> -->
+                        <!-- /.input-group -->
+                        <!-- </div> -->
+
+                        <!-- Blog Categories Well -->
+                        <div class="well">
+                            <h4>TAGS</h4>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/wiki">wiki(2)</a></br><a href="/tags/thinking">thinking(3)</a></br><a href="/tags/node">node(1)</a></br><a href="/tags/iptables">iptables(1)</a></br><a href="/tags/devenv">devenv(1)</a></br><a href="/tags/elk">elk(1)</a></br><a href="/tags/oop">oop(1)</a></br><a href="/tags/html">html(1)</a></br><a href="/tags/mesos">mesos(1)</a></br><a href="/tags/tmux">tmux(1)</a></br><a href="/tags/git">git(8)</a></br><a href="/tags/nodejs">nodejs(1)</a></br><a href="/tags/DaoCloud">DaoCloud(1)</a></br><a href="/tags/java">java(2)</a></br><a href="/tags/visualization">visualization(1)</a></br><a href="/tags/elasticsearch">elasticsearch(1)</a></br><a href="/tags/requirejs">requirejs(1)</a></br><a href="/tags/network">network(2)</a></br><a href="/tags/dns">dns(1)</a></br><a href="/tags/ss">ss(1)</a></br><a href="/tags/css">css(1)</a></br><a href="/tags/docker">docker(22)</a></br><a href="/tags/centos">centos(1)</a></br><a href="/tags/mysql">mysql(3)</a></br><a href="/tags/grub">grub(1)</a></br><a href="/tags/butterfly">butterfly(1)</a></br><a href="/tags/web">web(3)</a></br><a href="/tags/php">php(1)</a></br><a href="/tags/mongodab">mongodab(1)</a></br><a href="/tags/putty">putty(2)</a></br><a href="/tags/RHEL">RHEL(1)</a></br><a href="/tags/PXE">PXE(1)</a></br><a href="/tags/ci">ci(1)</a></br><a href="/tags/iPXE">iPXE(1)</a></br><a href="/tags/gh60">gh60(1)</a></br><a href="/tags/env">env(2)</a></br><a href="/tags/DES">DES(1)</a></br><a href="/tags/microservice">microservice(2)</a></br><a href="/tags/Ubuntu">Ubuntu(1)</a></br><a href="/tags/logstash">logstash(1)</a></br><a href="/tags/c">c(1)</a></br><a href="/tags/marathon">marathon(1)</a></br><a href="/tags/owncloud">owncloud(1)</a></br><a href="/tags/npm">npm(1)</a></br><a href="/tags/virtualbox">virtualbox(3)</a></br><a href="/tags/python">python(4)</a></br><a href="/tags/delegate">delegate(1)</a></br><a href="/tags/mac">mac(2)</a></br><a href="/tags/tray">tray(1)</a></br><a href="/tags/require.js">require.js(1)</a></br><a href="/tags/etcd">etcd(3)</a></br><a href="/tags/postgresql">postgresql(1)</a></br><a href="/tags/systemd-resolved">systemd-resolved(1)</a></br><a href="/tags/js">js(8)</a></br><a href="/tags/phpExtension">phpExtension(1)</a></br><a href="/tags/rancher">rancher(2)</a></br><a href="/tags/html5">html5(1)</a></br><a href="/tags/test">test(1)</a></br>
+                                    </ul>
+                                </div>
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/homebrew">homebrew(1)</a></br><a href="/tags/linux">linux(5)</a></br><a href="/tags/macos">macos(1)</a></br><a href="/tags/Cow">Cow(1)</a></br><a href="/tags/yaml">yaml(1)</a></br><a href="/tags/golang">golang(23)</a></br><a href="/tags/ucloud">ucloud(1)</a></br><a href="/tags/redsocks">redsocks(1)</a></br><a href="/tags/article">article(1)</a></br><a href="/tags/Docker">Docker(2)</a></br><a href="/tags/minecraft">minecraft(2)</a></br><a href="/tags/vim">vim(3)</a></br><a href="/tags/storage">storage(1)</a></br><a href="/tags/atom">atom(2)</a></br><a href="/tags/MongoDB">MongoDB(1)</a></br><a href="/tags/runc">runc(1)</a></br><a href="/tags/bootstrap">bootstrap(1)</a></br><a href="/tags/HomeBrew">HomeBrew(1)</a></br><a href="/tags/iterm2">iterm2(1)</a></br><a href="/tags/flannel">flannel(1)</a></br><a href="/tags/RunC">RunC(1)</a></br><a href="/tags/bazel">bazel(2)</a></br><a href="/tags/dev">dev(2)</a></br><a href="/tags/profiling">profiling(2)</a></br><a href="/tags/kibina">kibina(1)</a></br><a href="/tags/android">android(1)</a></br><a href="/tags/hexo">hexo(3)</a></br><a href="/tags/nginx">nginx(6)</a></br><a href="/tags/ubuntu">ubuntu(5)</a></br><a href="/tags/career">career(1)</a></br><a href="/tags/syslinux">syslinux(1)</a></br><a href="/tags/aglio">aglio(1)</a></br><a href="/tags/blog">blog(1)</a></br><a href="/tags/liteIDE">liteIDE(1)</a></br><a href="/tags/metaprogramming">metaprogramming(1)</a></br><a href="/tags/BusyBox">BusyBox(1)</a></br><a href="/tags/杂谈">杂谈(1)</a></br><a href="/tags/thrift">thrift(1)</a></br><a href="/tags/rkt">rkt(1)</a></br><a href="/tags/ssl">ssl(2)</a></br><a href="/tags/letsencrypt">letsencrypt(1)</a></br><a href="/tags/consul">consul(1)</a></br><a href="/tags/mongodb">mongodb(3)</a></br><a href="/tags/busybox">busybox(1)</a></br><a href="/tags/coreos">coreos(1)</a></br><a href="/tags/GC">GC(1)</a></br><a href="/tags/Linux">Linux(13)</a></br><a href="/tags/ShadowSocks">ShadowSocks(1)</a></br><a href="/tags/registry">registry(3)</a></br><a href="/tags/CoreOS">CoreOS(1)</a></br><a href="/tags/netplan">netplan(1)</a></br><a href="/tags/godoc">godoc(1)</a></br><a href="/tags/osx">osx(4)</a></br><a href="/tags/datatables">datatables(1)</a></br><a href="/tags/StackStorm2">StackStorm2(1)</a></br><a href="/tags/tenxcloud">tenxcloud(1)</a></br><a href="/tags/shell">shell(6)</a></br>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+
+                        <!-- Side Widget Well -->
+                        <div class="well">
+                            <h4>近期文章</h4>
+                            <a href="/2021/03/14/metaprogramming/">Metaprogramming and code generation/replace in action</a></br><a href="/2021/02/15/dockerprivateregistryen/">deploy docker registry under private network</a></br><a href="/2021/02/14/golangvimdev/">my vim golang programming environment</a></br><a href="/2021/02/06/bazelmacro/">bazel macro 的开发</a></br><a href="/2021/01/15/bazelboost/">bazel 使用经验和记录</a></br><a href="/2021/01/14/dockerprivateregistry/">小型团队内网创建docker registry</a></br><a href="/2021/01/14/ubuntudnssystemdresolved/">网关服务器部署DNS的冲突问题解决</a></br><a href="/2021/01/13/iptablesredsocksdocker/">iptables 使用 Redsocks 时候 Docker 没有网络问题的分析</a></br>
+                        </div>
+                        <div class="well">
+                            <h4>友情链接</h4>
+                            <a href="https://linux.cn/">Linux中国</a></br>
+                            <a href="http://locez.com/">LOCEZ</a></br>
+                            <a href="http://blog.ibeats.top/">CI_Knight</a>
+                        </div>
+
+                </div>
+
+            </div>
+            <!-- /.row -->
+
+            <hr>
+
+            <!-- Footer -->
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Copyright &copy; philo.top PowerBy <a href="https://github.com/lijianying10/RollingBlog">RollingBlog</a> 2020 Since 2015</p>
+                        <!-- Global site tag (gtag.js) - Google Analytics -->
+                        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173403528-1"></script>
+                        <script>
+                          window.dataLayer = window.dataLayer || [];
+                          function gtag(){dataLayer.push(arguments);}
+                          gtag('js', new Date());
+                        
+                          gtag('config', 'UA-173403528-1');
+                        </script>
+
+                    </div>
+                </div>
+                <!-- /.row -->
+            </footer>
+
+        </div>
+        <!-- /.container -->
+
+        <!-- jQuery -->
+        <script src="/js/jquery.js"></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/prism.js"></script>
+
+    </body>
+
+</html>
+

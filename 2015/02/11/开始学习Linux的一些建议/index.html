@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>开始学习Linux的一些建议</title>
+        <link href="/css/prism.css" rel="stylesheet">
+        <link href="/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/css/blog-post.css" rel="stylesheet">
+        <link href="/css/typo.css" rel="stylesheet">
+        <link rel="shortcut icon" href="/favicon.ico" />
+    </head>
+
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Philo</a>
+                </div>
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/">HOME</a>
+                        </li>
+                        <li>
+                            <a href="/archive/">Archive</a>
+                        </li>
+                        <li>
+                            <a href="/2015/02/21/index/index.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container -->
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container" style="
+                margin-top: 70px;
+                ">
+
+            <div class="row">
+
+                <!-- Blog Post Content Column -->
+                <div class="col-lg-9 col-12">
+
+                    <!-- Blog Post -->
+
+<!-- Title -->
+<h1><a href="/2015/02/11/开始学习Linux的一些建议/">开始学习Linux的一些建议</a></h1>
+ 
+<!-- Author -->
+<p class="lead">
+Tags
+
+<a href="/tags/Linux">Linux</a>
+
+<a href="/tags/wiki">wiki</a>
+
+</p>
+
+<hr>
+
+<!-- Date/Time -->
+<p><span class="glyphicon glyphicon-time"></span> 2015-02-11 21:25:26</p>
+
+<hr>
+
+<div class="typo">
+<h2>建议读者范围</h2>
+
+<ol>
+<li>有开发经验者。</li>
+<li>科研人员（由其Numrical）。</li>
+<li>动手能力强的。</li>
+<li>只是好奇，对于Linux只是浅尝辄止的就不建议继续往下看了。</li>
+</ol>
+
+<h2>端正学习态度</h2>
+
+<ol>
+<li>Linux不等于骇客（or Cracker）。
+当然众所周知很多“黑客工具”都是Linux平台上的，我帮助过很多Linux小白发现他们殊途同归都是朝着类似Aircrack-ng去的。
+但他们不知道的是：</li>
+<li>Linux只是一个工具，工具不是目的，只是手段。这一点很重要。
+
+<ol>
+<li>Linux很快的完成你的需求目标。因为他是个专业级别的工具。</li>
+<li>工具跟工具之间各有利弊 人和人都不能比呢。</li>
+</ol></li>
+<li>正确认识qq群。
+
+<ol>
+<li>潜水的太多</li>
+<li>正经帮人的几乎没有，千人群里面不会超过5个活跃的并且愿意帮助人的高手。</li>
+<li>另外问无意义问题，无厘头问题(没有前因后果，不知道要干啥就提问的问题)太多，高手就都走了。不愿意回答。</li>
+</ol></li>
+<li>Linux与Windows
+
+<ol>
+<li>没必要比，个人认为操作系统<code>当前</code>满足的需求内容是不同的。</li>
+<li>桌面习惯那个就用那个，两个不是水火不相容。</li>
+</ol></li>
+<li>什么文章有必要看什么文章没有必要看
+
+<ol>
+<li>垃圾文，讨论哪个好，哪个坏的。</li>
+<li>一看文章就只是手记，不是给人看的。</li>
+<li>百度文章非热搜词PageRank做的真心是非常糟糕。</li>
+</ol></li>
+<li>关于英文
+
+<ol>
+<li>Manual全是英文</li>
+<li>大家在Mailling list和IRC里面都说英文</li>
+<li>Email跟国外高手切磋得用英文。</li>
+<li>google搜关键问题得用英文。</li>
+<li>压根躲不过去，所以必须得用英文。</li>
+<li>不会英文不会学不好。只是可能会比会英语的人学的慢一点，比会英语的人吃力一点。</li>
+</ol></li>
+<li>学Linux不是为了装系统就完了。要学习Linux擅长的一面，而不是薄弱的一面去跟windows相比，但是新的微软（DotNet开源，新的 windows10已经对开发者利好，以及做技术的CEO。。。。），与Ubuntu branch 的新星 Deepin Linux以一定会在未来大放异彩。虽然PC已经疲软。</li>
+</ol>
+
+<h2>关于开发</h2>
+
+<ol>
+<li>如果你想用Linux工作的话。那么Linux跟开发绝对不是分开的东西。
+
+<ol>
+<li>开发的不可能不懂一点Linux运维，因为他们不会搭建环境怎么开发。</li>
+<li>一个好的运维不可能不懂开发。最贴切的例子：运维脚本。服务器状态数据可视化（Gnuplot，虽然cacti都有现成的了）等等。</li>
+</ol></li>
+</ol>
+
+<h2>发行版本</h2>
+
+<ol>
+<li>既然是来学习的，来解决身边问题的。那么就不要考虑好不好的问题，而是考虑什么好用什么不好用的问题。举几个贴切的例子。
+
+<ol>
+<li>Service方面，如果你使用Linux来坐传统的LAMP业务的花，想稳定而且有长期维护的版本那么RHEL（CentOS）系列的就比较适合你了。</li>
+<li>现在是Linux3.0时代，正处于版本号狂飙阶段（据闻，脱袜子准备3.19之后换挡到4.0了），各种新功能各种百花齐放。因此如果想用比较新的功能请使用版本好比较新的发行版本（Ubuntu，Fedora，等等）</li>
+</ol></li>
+<li>客观的来讲发行版本的选择：
+
+<ol>
+<li>选使用人比较多的，因为社区庞大，寻求到帮助的概率比较大。并且BUG也会是比较少的。</li>
+<li>根据应用情况来选择，如果是路由那么就选OpenWRT，另外如果是树莓派等等虽然选择比较多，但是为了稳定运行请选择官方提供的Image。会比较方便。</li>
+</ol></li>
+<li>推荐使用的发行版本
+
+<ol>
+<li>推荐<code>LFS</code></li>
+<li>也许很多人会反持有不同的意见。但是LFS如果使用CentOS 6 版本如果严格按照教程来做，那么就会非常非常轻松的完成安装。</li>
+<li>既然这么轻松，为什么我还要推荐LFS来做初次学习Linux的学习版本呢？</li>
+<li>在安装的过程中会熟悉很多很多Linux命令。</li>
+<li>还会熟悉Linux到底怎么组织运行起来的。遇到问题的时候才不会胡子眉毛一把抓。因为它的确不是很简单的小系统。</li>
+<li>会有机会熟悉各种Linux模块，明白到底什么是Linux内核，哪里是Linux内核，哪里是Linux。会绕过很多很多坑。</li>
+</ol></li>
+<li>不管选择什么发行版本：学知识，更好学习方法(学习方法，解决问题的方法，搜索的方法，等等都有好处)。</li>
+</ol>
+
+<h2>到底要不要桌面？</h2>
+
+<ol>
+<li>建议不要桌面。</li>
+<li>如果您是windows建议使用VirtualBox+headerLess做成托盘+Putty远程控制。</li>
+<li>如果您是Mac 建议使用VBoxHeadless的命令行使用Screen挂起运行。</li>
+</ol>
+
+<h2>学习Linux的配置</h2>
+
+<ol>
+<li>因为刚开始学习不宜直接安装Linux(如果不是超狂热爱好者还是选择虚拟机Linux比较合适，因为现在已经到了云时代了)</li>
+<li>虚拟机配置选择单核或者双核（如果您的机器配置高可以选择更高），如果只是个人使用的话，内存512MB足够了。已经非常大了。一般正常情况下裸奔的Linux不到100MB左右的内存使用。</li>
+</ol>
+
+<h2>如何问问题</h2>
+
+<ol>
+<li>请不要轻易提问，因为你每一次找人帮忙解决问题不但占用别人的时间，并且最重要的是，丢失了一次重要的学习机会。</li>
+<li>轻易不要到qq群里面提问，因为qq群里面有非常非常多的只会装Linux以及讨论Wine，Compiz问题的人，以及问一些关于QQ安装的问题。</li>
+<li>请到Mailling List里面看看别人都如何提问的。以及可以看到什么样的提问会有结果，什么样的提问会有很多人来回答。</li>
+</ol>
+
+</div>
+
+<hr>
+本人博客文章采用<a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC Attribution-NonCommercial协议</a>: CC Attribution-NonCommercial 必须保留原作者署名,并且不允许用于商业用途,其他行为都是允许的。
+<hr>
+
+<script src="https://utteranc.es/client.js"
+        repo="lijianying10/RollingBlog"
+        issue-term="开始学习Linux的一些建议"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2015/02/11/开始学习Linux的一些建议/" data-title="开始学习Linux的一些建议" data-url="http://www.philo.top/2015/02/11/开始学习Linux的一些建议/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"philotop"};
+(function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+})();
+</script>
+<!-- 多说公共JS代码 end -->
+
+<hr>
+
+                </div>
+
+                <!-- Blog Sidebar Widgets Column -->
+                <div class="col-lg-3 col-12">
+
+                    <!-- Blog Search Well -->
+                    <!--                 <div class="well">
+                        <h4>Blog Search</h4>
+                        <div class="input-group">
+                        <input type="text" class="form-control">
+                        <span class="input-group-btn">
+                        <button class="btn btn-default" type="button">
+                        <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        </span>
+                        </div> -->
+                        <!-- /.input-group -->
+                        <!-- </div> -->
+
+                        <!-- Blog Categories Well -->
+                        <div class="well">
+                            <h4>TAGS</h4>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/wiki">wiki(2)</a></br><a href="/tags/thinking">thinking(3)</a></br><a href="/tags/node">node(1)</a></br><a href="/tags/iptables">iptables(1)</a></br><a href="/tags/devenv">devenv(1)</a></br><a href="/tags/elk">elk(1)</a></br><a href="/tags/oop">oop(1)</a></br><a href="/tags/html">html(1)</a></br><a href="/tags/mesos">mesos(1)</a></br><a href="/tags/tmux">tmux(1)</a></br><a href="/tags/git">git(8)</a></br><a href="/tags/nodejs">nodejs(1)</a></br><a href="/tags/DaoCloud">DaoCloud(1)</a></br><a href="/tags/java">java(2)</a></br><a href="/tags/visualization">visualization(1)</a></br><a href="/tags/elasticsearch">elasticsearch(1)</a></br><a href="/tags/requirejs">requirejs(1)</a></br><a href="/tags/network">network(2)</a></br><a href="/tags/dns">dns(1)</a></br><a href="/tags/ss">ss(1)</a></br><a href="/tags/css">css(1)</a></br><a href="/tags/docker">docker(22)</a></br><a href="/tags/centos">centos(1)</a></br><a href="/tags/mysql">mysql(3)</a></br><a href="/tags/grub">grub(1)</a></br><a href="/tags/butterfly">butterfly(1)</a></br><a href="/tags/web">web(3)</a></br><a href="/tags/php">php(1)</a></br><a href="/tags/mongodab">mongodab(1)</a></br><a href="/tags/putty">putty(2)</a></br><a href="/tags/RHEL">RHEL(1)</a></br><a href="/tags/PXE">PXE(1)</a></br><a href="/tags/ci">ci(1)</a></br><a href="/tags/iPXE">iPXE(1)</a></br><a href="/tags/gh60">gh60(1)</a></br><a href="/tags/env">env(2)</a></br><a href="/tags/DES">DES(1)</a></br><a href="/tags/microservice">microservice(2)</a></br><a href="/tags/Ubuntu">Ubuntu(1)</a></br><a href="/tags/logstash">logstash(1)</a></br><a href="/tags/c">c(1)</a></br><a href="/tags/marathon">marathon(1)</a></br><a href="/tags/owncloud">owncloud(1)</a></br><a href="/tags/npm">npm(1)</a></br><a href="/tags/virtualbox">virtualbox(3)</a></br><a href="/tags/python">python(4)</a></br><a href="/tags/delegate">delegate(1)</a></br><a href="/tags/mac">mac(2)</a></br><a href="/tags/tray">tray(1)</a></br><a href="/tags/require.js">require.js(1)</a></br><a href="/tags/etcd">etcd(3)</a></br><a href="/tags/postgresql">postgresql(1)</a></br><a href="/tags/systemd-resolved">systemd-resolved(1)</a></br><a href="/tags/js">js(8)</a></br><a href="/tags/phpExtension">phpExtension(1)</a></br><a href="/tags/rancher">rancher(2)</a></br><a href="/tags/html5">html5(1)</a></br><a href="/tags/test">test(1)</a></br>
+                                    </ul>
+                                </div>
+                                <div class="col-lg-6">
+                                    <ul class="list-unstyled">
+                                        <!--                                 <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li>
+                                            <li><a href="#">Category Name</a>
+                                            </li> -->
+                                            <a href="/tags/homebrew">homebrew(1)</a></br><a href="/tags/linux">linux(5)</a></br><a href="/tags/macos">macos(1)</a></br><a href="/tags/Cow">Cow(1)</a></br><a href="/tags/yaml">yaml(1)</a></br><a href="/tags/golang">golang(23)</a></br><a href="/tags/ucloud">ucloud(1)</a></br><a href="/tags/redsocks">redsocks(1)</a></br><a href="/tags/article">article(1)</a></br><a href="/tags/Docker">Docker(2)</a></br><a href="/tags/minecraft">minecraft(2)</a></br><a href="/tags/vim">vim(3)</a></br><a href="/tags/storage">storage(1)</a></br><a href="/tags/atom">atom(2)</a></br><a href="/tags/MongoDB">MongoDB(1)</a></br><a href="/tags/runc">runc(1)</a></br><a href="/tags/bootstrap">bootstrap(1)</a></br><a href="/tags/HomeBrew">HomeBrew(1)</a></br><a href="/tags/iterm2">iterm2(1)</a></br><a href="/tags/flannel">flannel(1)</a></br><a href="/tags/RunC">RunC(1)</a></br><a href="/tags/bazel">bazel(2)</a></br><a href="/tags/dev">dev(2)</a></br><a href="/tags/profiling">profiling(2)</a></br><a href="/tags/kibina">kibina(1)</a></br><a href="/tags/android">android(1)</a></br><a href="/tags/hexo">hexo(3)</a></br><a href="/tags/nginx">nginx(6)</a></br><a href="/tags/ubuntu">ubuntu(5)</a></br><a href="/tags/career">career(1)</a></br><a href="/tags/syslinux">syslinux(1)</a></br><a href="/tags/aglio">aglio(1)</a></br><a href="/tags/blog">blog(1)</a></br><a href="/tags/liteIDE">liteIDE(1)</a></br><a href="/tags/metaprogramming">metaprogramming(1)</a></br><a href="/tags/BusyBox">BusyBox(1)</a></br><a href="/tags/杂谈">杂谈(1)</a></br><a href="/tags/thrift">thrift(1)</a></br><a href="/tags/rkt">rkt(1)</a></br><a href="/tags/ssl">ssl(2)</a></br><a href="/tags/letsencrypt">letsencrypt(1)</a></br><a href="/tags/consul">consul(1)</a></br><a href="/tags/mongodb">mongodb(3)</a></br><a href="/tags/busybox">busybox(1)</a></br><a href="/tags/coreos">coreos(1)</a></br><a href="/tags/GC">GC(1)</a></br><a href="/tags/Linux">Linux(13)</a></br><a href="/tags/ShadowSocks">ShadowSocks(1)</a></br><a href="/tags/registry">registry(3)</a></br><a href="/tags/CoreOS">CoreOS(1)</a></br><a href="/tags/netplan">netplan(1)</a></br><a href="/tags/godoc">godoc(1)</a></br><a href="/tags/osx">osx(4)</a></br><a href="/tags/datatables">datatables(1)</a></br><a href="/tags/StackStorm2">StackStorm2(1)</a></br><a href="/tags/tenxcloud">tenxcloud(1)</a></br><a href="/tags/shell">shell(6)</a></br>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+
+                        <!-- Side Widget Well -->
+                        <div class="well">
+                            <h4>近期文章</h4>
+                            <a href="/2021/03/14/metaprogramming/">Metaprogramming and code generation/replace in action</a></br><a href="/2021/02/15/dockerprivateregistryen/">deploy docker registry under private network</a></br><a href="/2021/02/14/golangvimdev/">my vim golang programming environment</a></br><a href="/2021/02/06/bazelmacro/">bazel macro 的开发</a></br><a href="/2021/01/15/bazelboost/">bazel 使用经验和记录</a></br><a href="/2021/01/14/dockerprivateregistry/">小型团队内网创建docker registry</a></br><a href="/2021/01/14/ubuntudnssystemdresolved/">网关服务器部署DNS的冲突问题解决</a></br><a href="/2021/01/13/iptablesredsocksdocker/">iptables 使用 Redsocks 时候 Docker 没有网络问题的分析</a></br>
+                        </div>
+                        <div class="well">
+                            <h4>友情链接</h4>
+                            <a href="https://linux.cn/">Linux中国</a></br>
+                            <a href="http://locez.com/">LOCEZ</a></br>
+                            <a href="http://blog.ibeats.top/">CI_Knight</a>
+                        </div>
+
+                </div>
+
+            </div>
+            <!-- /.row -->
+
+            <hr>
+
+            <!-- Footer -->
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Copyright &copy; philo.top PowerBy <a href="https://github.com/lijianying10/RollingBlog">RollingBlog</a> 2020 Since 2015</p>
+                        <!-- Global site tag (gtag.js) - Google Analytics -->
+                        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173403528-1"></script>
+                        <script>
+                          window.dataLayer = window.dataLayer || [];
+                          function gtag(){dataLayer.push(arguments);}
+                          gtag('js', new Date());
+                        
+                          gtag('config', 'UA-173403528-1');
+                        </script>
+
+                    </div>
+                </div>
+                <!-- /.row -->
+            </footer>
+
+        </div>
+        <!-- /.container -->
+
+        <!-- jQuery -->
+        <script src="/js/jquery.js"></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/prism.js"></script>
+
+    </body>
+
+</html>
+
